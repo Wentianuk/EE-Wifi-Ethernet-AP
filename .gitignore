@@ -1,0 +1,45 @@
+# Configuration files with credentials
+wifi_config.json
+
+# Log files
+*.log
+internet_logbook.log
+internet_monitor.log
+wifi_agent.log
+
+# Database files
+internet_logbook.db
+
+# Text log files
+internet_connectivity_records.txt
+internet_connectivity_full_export.txt
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+
+# Debug screenshots
+captive_portal_debug.png
+after_submit_debug.png

@@ -1,0 +1,28 @@
+{
+    "hotspots": [
+        {
+            "ssid": "EE WiFi",
+            "login_type": "bt_business",
+            "username": "your_email@example.com",
+            "password": "your_password",
+            "portal_url": "https://ee-wifi.ee.co.uk/home"
+        },
+        {
+            "ssid": "BTWiFi-with-FON",
+            "login_type": "bt_business",
+            "username": "your_email@example.com",
+            "password": "your_password",
+            "portal_url": "https://ee-wifi.ee.co.uk/home"
+        },
+        {
+            "ssid": "BTWiFi",
+            "login_type": "bt_business",
+            "username": "your_email@example.com",
+            "password": "your_password",
+            "portal_url": "https://ee-wifi.ee.co.uk/home"
+        }
+    ],
+    "check_interval": 30,
+    "max_retries": 3,
+    "timeout": 15
+}

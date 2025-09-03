@@ -1,0 +1,24 @@
+# WiFi Hotspot Auto-Connect Agent Dependencies
+# Install with: pip install -r requirements.txt
+
+# Web automation
+selenium>=4.15.0
+webdriver-manager>=4.0.0
+
+# HTTP requests
+requests>=2.31.0
+
+# Optional: For better JSON handling and validation
+jsonschema>=4.19.0
+
+# Optional: For enhanced logging
+colorlog>=6.7.0
+
+# Optional: For configuration management
+pyyaml>=6.0.1
+
+# Optional: For Windows-specific functionality
+pywin32>=306; sys_platform == "win32"
+
+# Optional: For system monitoring
+psutil>=5.9.0
