@@ -276,30 +276,36 @@ class WiFiHotspotAgent:
                 raise Exception("Could not initialize Chrome driver with any method")
             
             options = webdriver.ChromeOptions()
-            if self.headless:
-                options.add_argument('--headless')  # Run browser invisibly
-                self.logger.info("Running browser in headless (invisible) mode")
-            else:
-                self.logger.info("Running browser in visible mode for debugging")
+            
+            # Always add these basic options
             options.add_argument('--no-sandbox')
             options.add_argument('--disable-dev-shm-usage')
-            options.add_argument('--disable-gpu')  # Disable GPU for headless mode
-            options.add_argument('--window-size=1920,1080')  # Set window size for headless
             options.add_argument('--disable-web-security')  # Disable web security for captive portals
             options.add_argument('--allow-running-insecure-content')
             options.add_argument('--disable-blink-features=AutomationControlled')
-            options.add_argument('--disable-extensions')  # Disable extensions for headless
-            options.add_argument('--disable-plugins')  # Disable plugins for headless
-            options.add_argument('--disable-images')  # Disable images for faster loading
-            options.add_argument('--disable-background-timer-throttling')
-            options.add_argument('--disable-backgrounding-occluded-windows')
-            options.add_argument('--disable-renderer-backgrounding')
-            options.add_argument('--disable-features=TranslateUI')
-            options.add_argument('--disable-ipc-flooding-protection')
-            options.add_argument('--hide-scrollbars')
-            options.add_argument('--mute-audio')
             options.add_experimental_option("excludeSwitches", ["enable-automation"])
             options.add_experimental_option('useAutomationExtension', False)
+            
+            if self.headless:
+                # Headless mode options
+                options.add_argument('--headless')  # Run browser invisibly
+                options.add_argument('--disable-gpu')  # Disable GPU for headless mode
+                options.add_argument('--window-size=1920,1080')  # Set window size for headless
+                options.add_argument('--disable-extensions')  # Disable extensions for headless
+                options.add_argument('--disable-plugins')  # Disable plugins for headless
+                options.add_argument('--disable-images')  # Disable images for faster loading
+                options.add_argument('--disable-background-timer-throttling')
+                options.add_argument('--disable-backgrounding-occluded-windows')
+                options.add_argument('--disable-renderer-backgrounding')
+                options.add_argument('--disable-features=TranslateUI')
+                options.add_argument('--disable-ipc-flooding-protection')
+                options.add_argument('--hide-scrollbars')
+                options.add_argument('--mute-audio')
+                self.logger.info("Running browser in headless (invisible) mode")
+            else:
+                # Visible mode options
+                options.add_argument('--window-size=1200,800')  # Reasonable window size for visible mode
+                self.logger.info("Running browser in visible mode for debugging")
             
             driver = webdriver.Chrome(service=service, options=options)
             wait = WebDriverWait(driver, 1)
