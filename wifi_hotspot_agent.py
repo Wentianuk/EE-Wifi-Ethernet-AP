@@ -37,12 +37,12 @@ class WiFiHotspotAgent:
         
         # Set headless mode from config if not specified
         if headless is None:
-            self.headless = not self.config.get('headless_browser', True)
+            self.headless = self.config.get('headless_browser', True)
         else:
             self.headless = headless
             
-        # Override with debug mode if enabled
-        if self.config.get('debug_mode', False):
+        # Override with debug mode if enabled (but respect headless_browser setting)
+        if self.config.get('debug_mode', False) and not self.config.get('headless_browser', True):
             self.headless = False
             self.logger.info("Debug mode enabled - browser will be visible")
         
