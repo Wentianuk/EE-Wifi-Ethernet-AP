@@ -1,199 +1,148 @@
-# Debug Mode Guide
+# 🔍 Debug Mode Guide
 
-This guide explains how to toggle between invisible (production) and visible (debug) browser modes for troubleshooting and development.
+## Overview
+Debug mode allows you to see the browser window during the login process, making it easier to troubleshoot issues with the EE WiFi captive portal authentication.
 
-## 🔍 Debug Mode Overview
+## 🚀 Quick Start
 
-The system supports two browser modes:
-- **Production Mode (Default)**: Browser runs invisibly in the background
-- **Debug Mode**: Browser runs visibly so you can see what's happening
-
-## 🚀 How to Use Debug Mode
-
-### WiFi Agent Debug Mode
-
-Run the WiFi agent with visible browser for debugging:
-
+### Enable Debug Mode
 ```bash
-# Debug mode - browser will be visible
-python wifi_hotspot_agent.py --debug
-
-# Production mode - browser runs invisibly (default)
-python wifi_hotspot_agent.py
+python toggle_debug_mode.py
 ```
 
-### Internet Monitor Debug Mode
-
-Run the monitor with debug mode to see browser when WiFi agent is triggered:
-
+### Test Visible Browser
 ```bash
-# Debug mode - WiFi agent will run with visible browser
-python internet_monitor.py --debug
+python test_visible_browser.py
+```
 
-# Production mode - WiFi agent runs invisibly (default)
+### Run Full Monitor in Debug Mode
+```bash
 python internet_monitor.py
 ```
 
-### PowerShell Scripts with Debug Mode
+## ⚙️ Configuration
 
-You can also modify the PowerShell scripts to use debug mode:
+Your `wifi_config.json` now includes debug settings:
 
-```powershell
-# Edit start_monitor.ps1 to add --debug flag
-python internet_monitor.py --debug
-
-# Or run directly with debug
-python internet_monitor.py --debug --once
+```json
+{
+    "debug_mode": true,
+    "headless_browser": false
+}
 ```
 
-## 🎯 When to Use Debug Mode
+- **`debug_mode: true`** - Enables debug logging and visible browser
+- **`headless_browser: false`** - Shows browser window (set to `true` for hidden mode)
 
-### Use Debug Mode When:
-- **Troubleshooting login issues** - See exactly what's happening on the login page
-- **Testing new configurations** - Verify your credentials and settings work
-- **Development** - When modifying the automation scripts
-- **Captive portal issues** - Debug why login is failing
-- **Network problems** - See if the browser can reach the login page
+## 🔍 What You'll See
 
-### Use Production Mode When:
-- **Normal operation** - For regular automated WiFi connections
-- **Background monitoring** - When you want the system to run silently
-- **Auto-start** - For unattended operation
-- **Performance** - Debug mode is slightly slower due to visible rendering
+When debug mode is enabled, you'll see:
 
-## 🔧 Debug Mode Features
-
-### What You'll See in Debug Mode:
-- **Browser window opens** - Chrome browser will be visible
-- **Login process** - Watch the automated login steps
-- **Page navigation** - See how the script navigates through pages
-- **Element interaction** - Watch clicks, form filling, and button presses
-- **Error messages** - See any browser errors or page issues
-
-### What Happens in Production Mode:
-- **No browser window** - Runs completely in background
-- **Faster execution** - Optimized for speed
-- **Lower resource usage** - No GUI rendering
-- **Silent operation** - No visual distractions
+1. **Browser Window Opens** - Chrome browser becomes visible
+2. **Navigation to EE WiFi Portal** - Goes to `https://ee-wifi.ee.co.uk/home`
+3. **Cookie Acceptance** - Clicks "Accept all cookies" button
+4. **Login Button** - Clicks "Log in now" button
+5. **BT Business Tab** - Selects "BT Business Broadband" tab
+6. **Submit Button** - Clicks the submit button
+7. **Username/Password Fields** - Fills in your credentials
+8. **Final Submit** - Completes the login process
 
 ## 🛠️ Debugging Tips
 
-### 1. Check Browser Console
-In debug mode, you can open Chrome DevTools (F12) to see:
-- JavaScript errors
-- Network requests
-- Console messages
-- Element inspection
+### Watch for These Issues:
+- **Page doesn't load** - Check internet connection
+- **Elements not found** - EE WiFi portal may have changed
+- **Login fails** - Verify your BT Business credentials
+- **Browser crashes** - Check ChromeDriver compatibility
 
-### 2. Take Screenshots
-The system automatically saves debug screenshots:
-- `captive_portal_debug.png` - Initial login page
+### Screenshots
+The system automatically saves screenshots:
+- `captive_portal_debug.png` - Initial portal page
 - `after_submit_debug.png` - After clicking submit
 
-### 3. Monitor Logs
-Check the log files for detailed information:
-```bash
-# View WiFi agent logs
-Get-Content wifi_agent.log -Tail 20
+### Log Files
+Check these files for detailed information:
+- `wifi_agent.log` - Browser automation logs
+- `internet_monitor.log` - Connection monitoring logs
 
-# View monitor logs
-Get-Content internet_monitor.log -Tail 20
+## 🔄 Toggle Debug Mode
+
+### Method 1: Using the Toggle Script
+```bash
+python toggle_debug_mode.py
 ```
 
-### 4. Test Individual Components
-```bash
-# Test just the WiFi agent
-python wifi_hotspot_agent.py --debug
-
-# Test just connectivity check
-python internet_monitor.py --once
-
-# Test with custom config
-python wifi_hotspot_agent.py --debug --config my_config.json
+### Method 2: Manual Edit
+Edit `wifi_config.json`:
+```json
+{
+    "debug_mode": true,        // Set to false to disable
+    "headless_browser": false  // Set to true for hidden mode
+}
 ```
 
-## 🚨 Common Debug Scenarios
+## 🎯 Testing Scenarios
 
-### Scenario 1: Login Page Not Loading
-**Symptoms**: Browser opens but page doesn't load
-**Debug Steps**:
-1. Run in debug mode: `python wifi_hotspot_agent.py --debug`
-2. Check if you can see the EE WiFi login page
-3. Look for network errors in browser console (F12)
-4. Verify you're connected to the right WiFi network
-
-### Scenario 2: Login Form Not Working
-**Symptoms**: Page loads but login fails
-**Debug Steps**:
-1. Run in debug mode to see the form
-2. Check if email/password fields are filled correctly
-3. Verify the "Next" button is being clicked
-4. Look for JavaScript errors in console
-
-### Scenario 3: Captive Portal Not Detected
-**Symptoms**: System thinks internet is available when it's not
-**Debug Steps**:
-1. Run monitor in debug mode: `python internet_monitor.py --debug`
-2. Disconnect internet and watch the browser
-3. See if the captive portal page appears
-4. Check if the system detects the portal correctly
-
-## 📊 Performance Comparison
-
-| Mode | Browser Visibility | Speed | Resource Usage | Use Case |
-|------|-------------------|-------|----------------|----------|
-| Production | Invisible | Fast | Low | Normal operation |
-| Debug | Visible | Slower | Higher | Troubleshooting |
-
-## 🔄 Switching Between Modes
-
-### Quick Switch Commands:
+### Test 1: Manual Trigger
 ```bash
-# Switch to debug mode
-python wifi_hotspot_agent.py --debug
+python test_visible_browser.py
+```
+This runs the WiFi agent once in visible mode.
 
-# Switch back to production mode
-python wifi_hotspot_agent.py
-
-# Monitor with debug mode
-python internet_monitor.py --debug
-
-# Monitor in production mode
+### Test 2: Full Monitoring
+```bash
 python internet_monitor.py
 ```
+This runs continuous monitoring with visible browser when needed.
 
-### Permanent Configuration:
-You can modify the default behavior by editing the scripts:
-1. Change `headless=True` to `headless=False` in the code
-2. Or always use the `--debug` flag
+### Test 3: Single Check
+```bash
+python internet_monitor.py --once
+```
+This runs one connectivity check and triggers browser if needed.
 
-## 🎯 Best Practices
+## 🚨 Troubleshooting
 
-1. **Use production mode for normal operation**
-2. **Switch to debug mode only when troubleshooting**
-3. **Check logs first before using debug mode**
-4. **Take screenshots in debug mode for documentation**
-5. **Test in debug mode after configuration changes**
-6. **Use debug mode to verify new WiFi networks**
+### Browser Doesn't Open
+- Check if Chrome is installed
+- Verify ChromeDriver is working
+- Check for antivirus blocking
 
-## 🆘 Troubleshooting Debug Mode
+### Login Process Fails
+- Watch the browser window for error messages
+- Check if EE WiFi portal has changed
+- Verify your credentials are correct
 
-### Debug Mode Not Working:
-- Ensure Chrome browser is installed
-- Check that chromedriver.exe is present
-- Verify Python dependencies are installed
-- Run with administrator privileges if needed
+### Browser Opens But Doesn't Navigate
+- Check internet connectivity
+- Verify the portal URL is accessible
+- Check for proxy/firewall issues
 
-### Browser Not Opening:
-- Check if another Chrome instance is running
-- Kill existing Chrome processes: `taskkill /f /im chrome.exe`
-- Restart the script
+## 📊 Debug Output
 
-### Debug Mode Too Slow:
-- This is normal - debug mode is slower than production
-- Use production mode for regular operation
-- Debug mode is only for troubleshooting
+When debug mode is enabled, you'll see:
+```
+2025-09-03 17:30:00 - INFO - Debug mode enabled - browser will be visible
+2025-09-03 17:30:01 - INFO - Running browser in visible mode for debugging
+2025-09-03 17:30:02 - INFO - Current URL: https://ee-wifi.ee.co.uk/home
+2025-09-03 17:30:03 - INFO - Clicked cookie acceptance button
+2025-09-03 17:30:04 - INFO - Clicked login button
+2025-09-03 17:30:05 - INFO - Clicked BT Business tab
+2025-09-03 17:30:06 - INFO - Clicked submit button using selector: //input[@id='submit-btb']
+```
+
+## 🎉 Benefits of Debug Mode
+
+1. **Visual Feedback** - See exactly what's happening
+2. **Error Identification** - Spot issues immediately
+3. **Process Verification** - Confirm each step works
+4. **Troubleshooting** - Easier to diagnose problems
+5. **Learning** - Understand how the automation works
+
+## 🔒 Security Note
+
+Debug mode shows your login process in a visible browser window. Make sure you're in a private environment when using debug mode to protect your credentials.
 
 ---
 
-**Remember**: Debug mode is a powerful tool for troubleshooting, but use production mode for normal operation to get the best performance and user experience.
+**Ready to debug?** Run `python test_visible_browser.py` to see the login process in action! 🚀

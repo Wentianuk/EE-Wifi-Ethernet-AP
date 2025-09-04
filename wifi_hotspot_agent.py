@@ -23,17 +23,28 @@ from webdriver_manager.chrome import ChromeDriverManager
 class WiFiHotspotAgent:
     """Main class for WiFi hotspot automation."""
     
-    def __init__(self, config_file: str = "wifi_config.json", headless: bool = True):
+    def __init__(self, config_file: str = "wifi_config.json", headless: bool = None):
         """Initialize the WiFi agent with configuration.
         
         Args:
             config_file: Path to the configuration file
             headless: If True, run browser invisibly. If False, show browser for debugging.
+                     If None, read from config file.
         """
         self.config_file = config_file
-        self.headless = headless
         self.setup_logging()
         self.config = self._load_config()
+        
+        # Set headless mode from config if not specified
+        if headless is None:
+            self.headless = not self.config.get('headless_browser', True)
+        else:
+            self.headless = headless
+            
+        # Override with debug mode if enabled
+        if self.config.get('debug_mode', False):
+            self.headless = False
+            self.logger.info("Debug mode enabled - browser will be visible")
         
     def setup_logging(self):
         """Setup logging configuration."""
@@ -470,9 +481,206 @@ class WiFiHotspotAgent:
             except:
                 pass
             
-            # Look for additional login elements that might appear after submit
-            try:
-                # Check if we need to handle a different login form
+            # Check current URL to see if we were redirected
+            current_url = driver.current_url
+            self.logger.info(f"Current URL after submit: {current_url}")
+            
+            # Check if we're on a different domain (likely redirected to BT login)
+            if "bt.com" in current_url or "btbusiness" in current_url or "saf" in current_url or "auth.bt.com" in current_url:
+                self.logger.info("Redirected to BT login page - this is expected for BT Business")
+                
+                # Wait for the page to fully load
+                time.sleep(3)
+                
+                # Enhanced email field detection for BT OAuth2 pages
+                username_selectors = [
+                    # Standard input selectors
+                    "//input[@type='text' or @type='email' or @name='username' or @name='email' or @id='username' or @id='email']",
+                    "//input[@placeholder*='username' or @placeholder*='email' or @placeholder*='Username' or @placeholder*='Email']",
+                    # BT-specific selectors
+                    "//input[@name='loginfmt']",  # Microsoft/BT OAuth2 email field
+                    "//input[@id='loginfmt']",    # Microsoft/BT OAuth2 email field
+                    "//input[@name='email']",     # Generic email field
+                    "//input[@id='email']",       # Generic email field
+                    "//input[@type='email']",     # HTML5 email input
+                    "//input[contains(@class, 'email')]",  # Email class-based selector
+                    "//input[contains(@class, 'username')]", # Username class-based selector
+                    # More specific BT OAuth2 selectors
+                    "//input[@data-bind*='email']",
+                    "//input[@data-bind*='username']",
+                    "//input[@aria-label*='email' or @aria-label*='Email']",
+                    "//input[@aria-label*='username' or @aria-label*='Username']"
+                ]
+                
+                username_filled = False
+                for selector in username_selectors:
+                    try:
+                        username_field = wait.until(
+                            EC.presence_of_element_located((By.XPATH, selector))
+                        )
+                        if username_field.is_displayed() and username_field.is_enabled():
+                            username_field.clear()
+                            username_field.send_keys(config['username'])
+                            self.logger.info(f"Filled username field: {selector}")
+                            username_filled = True
+                            time.sleep(1)
+                            break
+                    except:
+                        continue
+                
+                if username_filled:
+                    # Enhanced Next/Continue button detection for BT OAuth2 pages
+                    next_selectors = [
+                        # Standard button text selectors
+                        "//button[contains(text(), 'Next')]",
+                        "//button[contains(text(), 'Continue')]",
+                        "//button[contains(text(), 'Proceed')]",
+                        "//button[contains(text(), 'Sign in')]",
+                        "//button[contains(text(), 'Login')]",
+                        "//button[contains(text(), 'Submit')]",
+                        # BT/Microsoft OAuth2 specific selectors
+                        "//input[@type='submit']",
+                        "//button[@type='submit']",
+                        "//input[@value='Next']",
+                        "//input[@value='Continue']",
+                        "//input[@value='Sign in']",
+                        "//input[@value='Login']",
+                        # ID and class-based selectors
+                        "//button[@id='idSIButton9']",  # Microsoft OAuth2 Next button
+                        "//input[@id='idSIButton9']",   # Microsoft OAuth2 Next button
+                        "//button[contains(@class, 'btn-primary')]",
+                        "//button[contains(@class, 'btn-submit')]",
+                        "//button[contains(@class, 'next')]",
+                        "//button[contains(@class, 'continue')]",
+                        # Data attribute selectors
+                        "//button[@data-bind*='next']",
+                        "//button[@data-bind*='continue']",
+                        "//button[@data-bind*='submit']",
+                        # Aria-label selectors
+                        "//button[@aria-label*='Next' or @aria-label*='Continue']",
+                        "//input[@aria-label*='Next' or @aria-label*='Continue']",
+                        # Form submission selectors
+                        "//form//button[@type='submit']",
+                        "//form//input[@type='submit']"
+                    ]
+                    
+                    next_clicked = False
+                    for selector in next_selectors:
+                        try:
+                            next_button = wait.until(
+                                EC.element_to_be_clickable((By.XPATH, selector))
+                            )
+                            if next_button.is_displayed() and next_button.is_enabled():
+                                next_button.click()
+                                self.logger.info(f"Clicked Next button: {selector}")
+                                next_clicked = True
+                                time.sleep(0.5)
+                                break
+                        except:
+                            continue
+                    
+                    if not next_clicked:
+                        self.logger.warning("Could not find Next button, trying alternative approach...")
+                        # Try pressing Enter on the email field as fallback
+                        try:
+                            username_field.send_keys("\n")
+                            self.logger.info("Pressed Enter on email field as fallback")
+                            time.sleep(0.5)
+                        except:
+                            pass
+                    
+                    # Enhanced password field detection for BT OAuth2 pages
+                    password_selectors = [
+                        # Standard password selectors
+                        "//input[@type='password']",
+                        "//input[@name='password']",
+                        "//input[@id='password']",
+                        # BT/Microsoft OAuth2 specific selectors
+                        "//input[@name='passwd']",     # Microsoft OAuth2 password field
+                        "//input[@id='passwd']",       # Microsoft OAuth2 password field
+                        "//input[@name='pwd']",        # Alternative password field name
+                        "//input[@id='pwd']",          # Alternative password field ID
+                        # Class and attribute-based selectors
+                        "//input[contains(@class, 'password')]",
+                        "//input[contains(@class, 'pwd')]",
+                        "//input[@placeholder*='password' or @placeholder*='Password']",
+                        "//input[@aria-label*='password' or @aria-label*='Password']",
+                        # Data attribute selectors
+                        "//input[@data-bind*='password']",
+                        "//input[@data-bind*='pwd']"
+                    ]
+                    
+                    for selector in password_selectors:
+                        try:
+                            password_field = wait.until(
+                                EC.presence_of_element_located((By.XPATH, selector))
+                            )
+                            if password_field.is_displayed() and password_field.is_enabled():
+                                password_field.clear()
+                                password_field.send_keys(config['password'])
+                                self.logger.info(f"Filled password field: {selector}")
+                                time.sleep(1)
+                                
+                                # Enhanced final submit button detection for BT OAuth2 pages
+                                submit_selectors = [
+                                    # BT-specific: Next button is used for final submission
+                                    "//button[contains(text(), 'Next')]",
+                                    "//button[@id='next']",
+                                    "//input[@id='next']",
+                                    # Standard button text selectors
+                                    "//button[contains(text(), 'Sign in')]",
+                                    "//button[contains(text(), 'Login')]",
+                                    "//button[contains(text(), 'Submit')]",
+                                    "//button[contains(text(), 'Sign In')]",
+                                    "//button[contains(text(), 'Log In')]",
+                                    "//button[contains(text(), 'Continue')]",
+                                    # BT/Microsoft OAuth2 specific selectors
+                                    "//input[@type='submit']",
+                                    "//button[@type='submit']",
+                                    "//input[@value='Sign in']",
+                                    "//input[@value='Login']",
+                                    "//input[@value='Submit']",
+                                    "//input[@value='Continue']",
+                                    "//input[@value='Next']",
+                                    # ID and class-based selectors
+                                    "//button[@id='idSIButton9']",  # Microsoft OAuth2 submit button
+                                    "//input[@id='idSIButton9']",   # Microsoft OAuth2 submit button
+                                    "//button[contains(@class, 'btn-primary')]",
+                                    "//button[contains(@class, 'btn-submit')]",
+                                    "//button[contains(@class, 'btn-signin')]",
+                                    "//button[contains(@class, 'btn-login')]",
+                                    # Data attribute selectors
+                                    "//button[@data-bind*='submit']",
+                                    "//button[@data-bind*='signin']",
+                                    "//button[@data-bind*='login']",
+                                    # Aria-label selectors
+                                    "//button[@aria-label*='Sign in' or @aria-label*='Login']",
+                                    "//input[@aria-label*='Sign in' or @aria-label*='Login']",
+                                    # Form submission selectors
+                                    "//form//button[@type='submit']",
+                                    "//form//input[@type='submit']"
+                                ]
+                                
+                                for submit_selector in submit_selectors:
+                                    try:
+                                        submit_button = wait.until(
+                                            EC.element_to_be_clickable((By.XPATH, submit_selector))
+                                        )
+                                        submit_button.click()
+                                        self.logger.info(f"Clicked final submit button: {submit_selector}")
+                                        time.sleep(0.5)
+                                        break
+                                    except:
+                                        continue
+                                break
+                        except:
+                            continue
+                else:
+                    self.logger.warning("Could not find username field on redirected page")
+            else:
+                # Still on EE WiFi page, look for additional login elements
+                self.logger.info("Still on EE WiFi page, looking for additional login elements...")
+                
                 additional_login_selectors = [
                     "//input[@type='text' or @type='email' or @name='username' or @name='email']",
                     "//input[@type='password']",
@@ -489,95 +697,78 @@ class WiFiHotspotAgent:
                         element = wait.until(
                             EC.presence_of_element_located((By.XPATH, selector))
                         )
-                        self.logger.info(f"Found additional login element: {selector}")
-                        
-                        # If it's a username/email field, try to fill it
-                        if 'username' in selector or 'email' in selector or 'text' in selector:
-                            if 'config' in locals() and 'username' in config:
+                        if element.is_displayed() and element.is_enabled():
+                            self.logger.info(f"Found additional login element: {selector}")
+                            
+                            # If it's a username/email field, try to fill it
+                            if 'username' in selector or 'email' in selector or 'text' in selector:
                                 element.clear()
                                 element.send_keys(config['username'])
                                 self.logger.info("Filled username field")
-                                time.sleep(0.5)
+                                time.sleep(1)
                                 
-                                # After filling email, look for and click the Next button
-                                try:
-                                    next_button_selectors = [
-                                        "//button[contains(text(), 'Next')]",
-                                        "//button[contains(text(), 'Continue')]",
-                                        "//button[contains(text(), 'Proceed')]",
-                                        "//input[@type='submit']",
-                                        "//button[@type='submit']"
-                                    ]
-                                    
-                                    for next_selector in next_button_selectors:
-                                        try:
-                                            next_button = wait.until(
-                                                EC.element_to_be_clickable((By.XPATH, next_selector))
-                                            )
-                                            next_button.click()
-                                            self.logger.info(f"Clicked Next button: {next_selector}")
-                                            time.sleep(0.5)
-                                            break
-                                        except:
-                                            continue
-                                except Exception as e:
-                                    self.logger.info(f"Could not find or click Next button: {e}")
+                                # Look for Next button
+                                next_button_selectors = [
+                                    "//button[contains(text(), 'Next')]",
+                                    "//button[contains(text(), 'Continue')]",
+                                    "//input[@type='submit']",
+                                    "//button[@type='submit']"
+                                ]
                                 
-                                # Don't break here - continue to look for password field
+                                for next_selector in next_button_selectors:
+                                    try:
+                                        next_button = wait.until(
+                                            EC.element_to_be_clickable((By.XPATH, next_selector))
+                                        )
+                                        next_button.click()
+                                        self.logger.info(f"Clicked Next button: {next_selector}")
+                                        time.sleep(1)
+                                        break
+                                    except:
+                                        continue
                                 continue
 
-                        # If it's a password field, try to fill it
-                        elif 'password' in selector:
-                            if 'config' in locals() and 'password' in config:
+                            # If it's a password field, try to fill it
+                            elif 'password' in selector:
                                 element.clear()
                                 element.send_keys(config['password'])
                                 self.logger.info("Filled password field")
-                                time.sleep(0.5)
+                                time.sleep(1)
                                 
-                                # After filling password, look for and click Next button
-                                try:
-                                    next_button_selectors = [
-                                        "//button[contains(text(), 'Next')]",
-                                        "//button[contains(text(), 'Continue')]",
-                                        "//button[contains(text(), 'Sign in')]",
-                                        "//button[contains(text(), 'Login')]",
-                                        "//button[contains(text(), 'Submit')]",
-                                        "//input[@type='submit']",
-                                        "//button[@type='submit']"
-                                    ]
-                                    
-                                    for next_selector in next_button_selectors:
-                                        try:
-                                            next_button = wait.until(
-                                                EC.element_to_be_clickable((By.XPATH, next_selector))
-                                            )
-                                            next_button.click()
-                                            self.logger.info(f"Clicked Next/Submit button: {next_selector}")
-                                            time.sleep(0.5)
-                                            break
-                                        except:
-                                            continue
-                                except Exception as e:
-                                    self.logger.info(f"Could not find or click Next/Submit button: {e}")
+                                # Look for final submit button
+                                submit_button_selectors = [
+                                    "//button[contains(text(), 'Sign in')]",
+                                    "//button[contains(text(), 'Login')]",
+                                    "//button[contains(text(), 'Submit')]",
+                                    "//input[@type='submit']",
+                                    "//button[@type='submit']"
+                                ]
                                 
-                                # After clicking Next/Submit, we're done with this flow
+                                for submit_selector in submit_button_selectors:
+                                    try:
+                                        submit_button = wait.until(
+                                            EC.element_to_be_clickable((By.XPATH, submit_selector))
+                                        )
+                                        submit_button.click()
+                                        self.logger.info(f"Clicked final submit button: {submit_selector}")
+                                        time.sleep(1)
+                                        break
+                                    except:
+                                        continue
                                 break
 
-                        # If it's a button, try to click it
-                        elif 'button' in selector:
-                            element.click()
-                            self.logger.info(f"Clicked additional button: {selector}")
-                            time.sleep(0.5)
-                            break
+                            # If it's a button, try to click it
+                            elif 'button' in selector:
+                                element.click()
+                                self.logger.info(f"Clicked additional button: {selector}")
+                                time.sleep(1)
+                                break
                     except:
                         continue
-                        
-            except Exception as e:
-                self.logger.info(f"No additional login elements found or error: {e}")
                 
             # Final wait and verification
             self.logger.info("Final verification...")
-            time.sleep(2)
+            time.sleep(0.5)
             
             # Browser will be closed by the main handle_captive_portal method
             self.logger.info("Login process completed, browser will be closed...")
@@ -618,6 +809,258 @@ class WiFiHotspotAgent:
             self.logger.error(f"Error in form-based login: {e}")
             return False
             
+    def handle_direct_bt_auth_url(self, auth_url: str, config: Dict) -> bool:
+        """Handle direct BT authentication URL (like OAuth2 authorization URLs)."""
+        self.logger.info(f"Handling direct BT authentication URL: {auth_url}")
+        
+        try:
+            # Setup Chrome driver with multiple fallback options
+            service = None
+            driver = None
+            
+            # Try multiple approaches to get Chrome driver
+            driver_attempts = [
+                self._try_local_driver,
+                self._try_webdriver_manager,
+                self._try_system_chromedriver,
+                self._try_chromedriver_in_path
+            ]
+            
+            for attempt_func in driver_attempts:
+                try:
+                    service = attempt_func()
+                    if service:
+                        break
+                except Exception as e:
+                    self.logger.debug(f"Driver attempt failed: {e}")
+                    continue
+            
+            if not service:
+                raise Exception("Could not initialize Chrome driver with any method")
+            
+            options = webdriver.ChromeOptions()
+            
+            # Always add these basic options
+            options.add_argument('--no-sandbox')
+            options.add_argument('--disable-dev-shm-usage')
+            options.add_argument('--disable-web-security')
+            options.add_argument('--allow-running-insecure-content')
+            options.add_argument('--disable-blink-features=AutomationControlled')
+            options.add_experimental_option("excludeSwitches", ["enable-automation"])
+            options.add_experimental_option('useAutomationExtension', False)
+            
+            if self.headless:
+                options.add_argument('--headless')
+                options.add_argument('--disable-gpu')
+                options.add_argument('--window-size=1920,1080')
+                options.add_argument('--disable-extensions')
+                options.add_argument('--disable-plugins')
+                options.add_argument('--disable-images')
+                options.add_argument('--disable-background-timer-throttling')
+                options.add_argument('--disable-backgrounding-occluded-windows')
+                options.add_argument('--disable-renderer-backgrounding')
+                options.add_argument('--disable-features=TranslateUI')
+                options.add_argument('--disable-ipc-flooding-protection')
+                options.add_argument('--hide-scrollbars')
+                options.add_argument('--mute-audio')
+                self.logger.info("Running browser in headless (invisible) mode")
+            else:
+                options.add_argument('--window-size=1200,800')
+                self.logger.info("Running browser in visible mode for debugging")
+            
+            driver = webdriver.Chrome(service=service, options=options)
+            wait = WebDriverWait(driver, 10)
+            
+            # Navigate directly to the authentication URL
+            driver.get(auth_url)
+            time.sleep(3)
+            
+            # Take a screenshot for debugging
+            try:
+                driver.save_screenshot("bt_auth_debug.png")
+                self.logger.info("Screenshot saved as bt_auth_debug.png")
+            except:
+                pass
+            
+            # Handle the authentication flow
+            success = self._handle_bt_oauth2_flow(driver, wait, config)
+            
+            driver.quit()
+            return success
+            
+        except Exception as e:
+            self.logger.error(f"Error handling direct BT auth URL: {e}")
+            return False
+    
+    def _handle_bt_oauth2_flow(self, driver, wait, config) -> bool:
+        """Handle BT OAuth2 authentication flow."""
+        try:
+            self.logger.info("Starting BT OAuth2 authentication flow")
+            
+            # Wait for page to load
+            time.sleep(0.5)
+            
+            # Look for email field
+            email_selectors = [
+                "//input[@name='loginfmt']",     # Microsoft OAuth2 email field
+                "//input[@id='loginfmt']",       # Microsoft OAuth2 email field
+                "//input[@type='email']",        # HTML5 email input
+                "//input[@name='email']",        # Generic email field
+                "//input[@id='email']",          # Generic email field
+                "//input[@type='text' and contains(@placeholder, 'email')]",
+                "//input[@type='text' and contains(@placeholder, 'Email')]",
+                "//input[@type='text' and contains(@placeholder, 'username')]",
+                "//input[@type='text' and contains(@placeholder, 'Username')]"
+            ]
+            
+            email_filled = False
+            for selector in email_selectors:
+                try:
+                    email_field = wait.until(
+                        EC.presence_of_element_located((By.XPATH, selector))
+                    )
+                    if email_field.is_displayed() and email_field.is_enabled():
+                        email_field.clear()
+                        email_field.send_keys(config['username'])
+                        self.logger.info(f"Filled email field: {selector}")
+                        email_filled = True
+                        time.sleep(1)
+                        break
+                except:
+                    continue
+            
+            if not email_filled:
+                self.logger.error("Could not find email field")
+                return False
+            
+            # Look for Next button
+            next_selectors = [
+                "//input[@type='submit']",
+                "//button[@type='submit']",
+                "//input[@value='Next']",
+                "//button[contains(text(), 'Next')]",
+                "//input[@id='idSIButton9']",
+                "//button[@id='idSIButton9']"
+            ]
+            
+            next_clicked = False
+            for selector in next_selectors:
+                try:
+                    next_button = wait.until(
+                        EC.element_to_be_clickable((By.XPATH, selector))
+                    )
+                    if next_button.is_displayed() and next_button.is_enabled():
+                        next_button.click()
+                        self.logger.info(f"Clicked Next button: {selector}")
+                        next_clicked = True
+                        time.sleep(3)
+                        break
+                except:
+                    continue
+            
+            if not next_clicked:
+                self.logger.warning("Could not find Next button, trying Enter key...")
+                try:
+                    email_field.send_keys("\n")
+                    self.logger.info("Pressed Enter on email field")
+                    time.sleep(3)
+                except:
+                    pass
+            
+            # Now look for password field
+            password_selectors = [
+                "//input[@name='passwd']",       # Microsoft OAuth2 password field
+                "//input[@id='passwd']",         # Microsoft OAuth2 password field
+                "//input[@type='password']",     # Standard password field
+                "//input[@name='password']",     # Generic password field
+                "//input[@id='password']"        # Generic password field
+            ]
+            
+            password_filled = False
+            for selector in password_selectors:
+                try:
+                    password_field = wait.until(
+                        EC.presence_of_element_located((By.XPATH, selector))
+                    )
+                    if password_field.is_displayed() and password_field.is_enabled():
+                        password_field.clear()
+                        password_field.send_keys(config['password'])
+                        self.logger.info(f"Filled password field: {selector}")
+                        password_filled = True
+                        time.sleep(1)
+                        break
+                except:
+                    continue
+            
+            if not password_filled:
+                self.logger.error("Could not find password field")
+                return False
+            
+            # Look for final submit button
+            submit_selectors = [
+                # BT-specific: Next button is used for final submission
+                "//button[contains(text(), 'Next')]",
+                "//button[@id='next']",
+                "//input[@id='next']",
+                # Standard submit selectors
+                "//input[@type='submit']",
+                "//button[@type='submit']",
+                "//input[@value='Sign in']",
+                "//button[contains(text(), 'Sign in')]",
+                "//input[@id='idSIButton9']",
+                "//button[@id='idSIButton9']"
+            ]
+            
+            submit_clicked = False
+            for selector in submit_selectors:
+                try:
+                    submit_button = wait.until(
+                        EC.element_to_be_clickable((By.XPATH, selector))
+                    )
+                    if submit_button.is_displayed() and submit_button.is_enabled():
+                        submit_button.click()
+                        self.logger.info(f"Clicked submit button: {selector}")
+                        submit_clicked = True
+                        time.sleep(3)
+                        break
+                except:
+                    continue
+            
+            if not submit_clicked:
+                self.logger.warning("Could not find submit button, trying Enter key...")
+                try:
+                    password_field.send_keys("\n")
+                    self.logger.info("Pressed Enter on password field")
+                    time.sleep(3)
+                except:
+                    pass
+            
+            # Wait for authentication to complete
+            time.sleep(5)
+            
+            # Check if we were redirected to a success page
+            current_url = driver.current_url
+            self.logger.info(f"Final URL after authentication: {current_url}")
+            
+            # Take final screenshot
+            try:
+                driver.save_screenshot("bt_auth_final.png")
+                self.logger.info("Final screenshot saved as bt_auth_final.png")
+            except:
+                pass
+            
+            # Check if authentication was successful
+            if "error" not in current_url.lower() and "fail" not in current_url.lower():
+                self.logger.info("BT OAuth2 authentication appears successful")
+                return True
+            else:
+                self.logger.warning("BT OAuth2 authentication may have failed")
+                return False
+                
+        except Exception as e:
+            self.logger.error(f"Error in BT OAuth2 flow: {e}")
+            return False
+
     def _handle_click_through_login(self, driver, wait) -> bool:
         """Handle click-through login (terms acceptance)."""
         try:
@@ -654,40 +1097,28 @@ class WiFiHotspotAgent:
             self.logger.info("Internet is already available")
             return True
             
-        # Get available networks
-        available_networks = self.get_available_networks()
+        # For Ethernet + AP setup, we don't need to connect to WiFi networks
+        # The AP is already connected to EE WiFi, we just need to handle captive portal
+        self.logger.info("Ethernet mode: Handling captive portal for AP router re-authentication")
         
-        # Try to connect to configured hotspots
+        # Try to handle captive portal for configured hotspots
         for hotspot in self.config['hotspots']:
             ssid = hotspot['ssid']
             
-            if ssid in available_networks:
-                self.logger.info(f"Found configured hotspot: {ssid}")
+            # Skip Profile network as it's not a hotspot
+            if ssid == "Profile":
+                continue
                 
-                # Connect to the network
-                if self.connect_to_network(ssid):
-                    # Wait for connection to stabilize
-                    time.sleep(1)
-                    
-                    # Check if internet is available
-                    self.logger.info(f"Checking internet connectivity after connecting to {ssid}...")
-                    if self.check_internet_connectivity():
-                        self.logger.info(f"Internet available on {ssid}")
-                        return True
-                    else:
-                        # Handle captive portal
-                        self.logger.info(f"No internet detected - handling captive portal for {ssid}")
-                        if self.handle_captive_portal(hotspot):
-                            self.logger.info(f"Successfully logged into {ssid}")
-                            return True
-                        else:
-                            self.logger.warning(f"Failed to login to {ssid}")
-                else:
-                    self.logger.warning(f"Failed to connect to {ssid}")
+            self.logger.info(f"Attempting captive portal login for {ssid}")
+            
+            # Handle captive portal directly (AP is already connected to EE WiFi)
+            if self.handle_captive_portal(hotspot):
+                self.logger.info(f"Successfully logged into {ssid} via captive portal")
+                return True
             else:
-                self.logger.info(f"Configured hotspot {ssid} not available")
+                self.logger.warning(f"Failed to login to {ssid} via captive portal")
                 
-        self.logger.error("No internet connection established")
+        self.logger.error("No internet connection established via captive portal")
         return False
 
 

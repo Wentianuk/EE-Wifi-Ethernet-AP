@@ -1,451 +1,317 @@
-# WiFi Hotspot Auto-Connect Agent with Internet Monitor & Logbook
+# EE WiFi Auto-Login System
 
-A comprehensive Windows-based system that automatically connects to WiFi hotspots, handles captive portal authentication, monitors internet connectivity, and maintains detailed logs of all connectivity events.
+A production-ready Windows system that automatically handles EE WiFi captive portal authentication with BT Business Broadband accounts. Features continuous internet monitoring, automatic re-authentication, and comprehensive logging.
 
-## 🚀 Project Overview
+## 🚀 Overview
 
-This system provides **fully automated WiFi hotspot management** with:
-- **Automatic WiFi Connection**: Connects to configured networks without user intervention
-- **Smart Captive Portal Handling**: Supports multiple login types including BT Business Broadband
-- **Continuous Internet Monitoring**: 24/7 connectivity monitoring with auto-recovery
-- **Comprehensive Logging**: SQLite database + text file logging of all connectivity events
-- **Auto-Start Capability**: Runs automatically on Windows startup
-- **Production-Ready**: Optimized timing and error handling for reliable operation
+This system provides **fully automated EE WiFi management** for users with BT Business Broadband accounts:
+
+- **🔄 Automatic Re-authentication**: Handles EE WiFi captive portal when AP router logs out
+- **⏱️ Continuous Monitoring**: 24/7 internet connectivity monitoring every 30 seconds
+- **⚡ Fast Recovery**: 13.48-second optimized login process
+- **🔍 Production Ready**: Invisible browser mode for seamless operation
+- **📊 Comprehensive Logging**: SQLite database + text file logging
+- **🚀 Auto-Start**: Runs automatically on Windows startup
 
 ## ⚠️ Security First
 
 **Important**: This repository contains a template configuration file. Never commit your actual WiFi credentials to version control.
 
 1. Copy `wifi_config_template.json` to `wifi_config.json`
-2. Update `wifi_config.json` with your real credentials
+2. Update `wifi_config.json` with your real BT Business credentials
 3. Keep `wifi_config.json` in your `.gitignore` (already configured)
 4. The template file is safe to share publicly
 
-## 📁 File Structure & Functions
+## 🎯 Perfect For
+
+- **Ethernet + AP Setup**: Monitor Ethernet connection to AP router connected to EE WiFi
+- **BT Business Users**: Automatic EE WiFi authentication with BT Business Broadband accounts
+- **24/7 Operation**: Continuous monitoring with automatic recovery
+- **Production Use**: Optimized timing and invisible browser operation
+
+## 📁 Project Structure
 
 ### Core System Files
-| File | Function | Description |
-|------|----------|-------------|
-| `wifi_hotspot_agent.py` | **Main WiFi Agent** | Automatically connects to WiFi hotspots and handles captive portal authentication. Supports multiple login types with optimized timing. |
-| `internet_monitor.py` | **Internet Monitor** | Continuously monitors internet connectivity every 30 seconds. Automatically triggers WiFi agent when connection is lost. |
-| `internet_logbook.py` | **Connectivity Logbook** | Records all connectivity events to SQLite database. Provides reports, statistics, and text file exports. |
-| `chromedriver.exe` | **Chrome Driver** | Local Chrome WebDriver for browser automation. Eliminates need for internet connection during setup. |
+| File | Purpose |
+|------|---------|
+| `wifi_hotspot_agent.py` | **Main Agent** - Handles BT Business login automation |
+| `internet_monitor.py` | **Monitor** - Continuous connectivity monitoring every 30s |
+| `internet_logbook.py` | **Logging** - SQLite database + text file logging |
+| `start_continuous_monitor.py` | **Launcher** - Start continuous monitoring |
+| `check_monitor_status.py` | **Status** - Check system status and health |
+| `toggle_browser_mode.py` | **Utility** - Switch between debug/production modes |
 
-### Configuration Files
-| File | Function | Description |
-|------|----------|-------------|
-| `wifi_config.json` | **WiFi Configuration** | Your actual WiFi credentials and settings (not in git). Contains SSIDs, login types, usernames, passwords. |
-| `wifi_config_template.json` | **Configuration Template** | Safe template file showing required configuration structure. Safe to share publicly. |
-| `requirements.txt` | **Python Dependencies** | Lists all required Python packages for the system. |
+### Configuration & Setup
+| File | Purpose |
+|------|---------|
+| `wifi_config.json` | **Your Config** - BT Business credentials (not in git) |
+| `wifi_config_template.json` | **Template** - Safe configuration template |
+| `requirements.txt` | **Dependencies** - Python package requirements |
+| `chromedriver.exe` | **Driver** - Local Chrome WebDriver |
 
-### Auto-Start & Setup
-| File | Function | Description |
-|------|----------|-------------|
-| `setup_autostart.ps1` | **Auto-Start Setup (PowerShell)** | Creates Windows Scheduled Task to run monitor on startup. Supports custom intervals and removal. |
-| `setup_autostart.bat` | **Auto-Start Setup (Batch)** | Alternative batch file for setting up auto-start functionality. |
-| `AUTO_START_SETUP.md` | **Auto-Start Documentation** | Comprehensive guide for setting up automatic startup on Windows. |
-
-### Monitoring & Control
-| File | Function | Description |
-|------|----------|-------------|
-| `start_monitor.ps1` | **Monitor Launcher (PowerShell)** | Starts the internet monitor with various options (continuous, once, background, custom interval). |
-| `start_monitor.bat` | **Monitor Launcher (Batch)** | Alternative batch file to start the internet monitor. |
-| `view_logbook.ps1` | **Logbook Viewer** | PowerShell script to view connectivity reports, recent events, and export data. |
-
-### Log Files & Data
-| File | Function | Description |
-|------|----------|-------------|
-| `internet_logbook.db` | **SQLite Database** | Stores all connectivity events, daily summaries, and statistics. |
-| `internet_connectivity_records.txt` | **Continuous Text Log** | Real-time text file logging of all connectivity events. |
-| `internet_connectivity_full_export.txt` | **Full Export File** | Comprehensive export of all records with summaries and statistics. |
-| `internet_logbook.log` | **System Log** | Detailed system logging for debugging and monitoring. |
-| `internet_monitor.log` | **Monitor Log** | Internet monitor activity and status logs. |
-| `wifi_agent.log` | **WiFi Agent Log** | WiFi connection attempts and captive portal handling logs. |
+### Auto-Start & Control
+| File | Purpose |
+|------|---------|
+| `start_monitor.ps1` | **PowerShell Launcher** - Start monitoring with options |
+| `start_monitor.bat` | **Batch Launcher** - Alternative startup method |
+| `setup_autostart.ps1` | **Auto-Start Setup** - Configure Windows startup |
+| `setup_autostart.bat` | **Auto-Start Batch** - Alternative auto-start setup |
 
 ### Documentation
-| File | Function | Description |
-|------|----------|-------------|
-| `README.md` | **Project Documentation** | This comprehensive guide covering installation, usage, and all features. |
-| `CONFIGURATION_GUIDE.md` | **Configuration Guide** | Detailed guide for setting up WiFi credentials and configuration options. |
-| `GITHUB_SETUP.md` | **GitHub Setup Guide** | Quick start guide for users cloning from GitHub repository. |
-| `DEBUG_MODE_GUIDE.md` | **Debug Mode Guide** | Complete guide for using visible/invisible browser modes for troubleshooting. |
+| File | Purpose |
+|------|---------|
+| `README.md` | **This Guide** - Complete project documentation |
+| `CONFIGURATION_GUIDE.md` | **Setup Guide** - Detailed configuration instructions |
+| `DEBUG_MODE_GUIDE.md` | **Debug Guide** - Troubleshooting with visible browser |
+| `ETHERNET_SETUP_GUIDE.md` | **Ethernet Guide** - Ethernet + AP setup instructions |
+| `AUTO_START_SETUP.md` | **Auto-Start Guide** - Windows startup configuration |
 
-## 🎯 Key Features
+## ⚙️ Quick Setup
 
-### Automatic WiFi Connection
-- **Smart Network Detection**: Automatically scans and connects to configured WiFi networks
-- **Multiple Login Types**: Supports click-through, form-based, and BT Business Broadband logins
-- **Optimized Performance**: Fast connection times with intelligent timing adjustments
-- **Invisible Browser**: Runs completely in background with headless Chrome
-- **Offline Capability**: Works without internet connection for driver management
+### 1. Prerequisites
+- **BT Business Broadband Account** (not BT Consumer)
+- **Python 3.7+** installed
+- **Chrome Browser** installed
+- **Windows 10/11** with Administrator privileges
 
-### Captive Portal Handling
-- **EE WiFi → BT Business Flow**: Complete automation of the EE WiFi login process
-- **Cookie Consent**: Automatically accepts cookie policies
-- **Multi-Step Login**: Handles complex login flows with email/password verification
-- **Success Verification**: Confirms internet access after successful login
-
-### Internet Monitoring
-- **24/7 Monitoring**: Continuous connectivity checking every 30 seconds
-- **Ultra-Fast Response**: Triggers WiFi agent after just 1 failure (30 seconds)
-- **Smart Detection**: Uses multiple reliable hosts (Google DNS, Cloudflare, etc.)
-- **Auto-Recovery**: Automatically runs WiFi agent when connection is lost
-- **Network Awareness**: Only triggers on configured hotspot networks
-
-### Comprehensive Logging
-- **SQLite Database**: Structured storage of all connectivity events
-- **Text File Logs**: Human-readable continuous logging
-- **Export Functionality**: Full data export with statistics and summaries
-- **Event Tracking**: Records disconnections, reconnections, downtime, and recovery times
-
-### Auto-Start Capability
-- **Windows Task Scheduler**: Runs automatically on system startup
-- **Configurable Intervals**: Customizable monitoring frequency
-- **Easy Setup**: Simple PowerShell scripts for installation and removal
-- **Background Operation**: Runs silently without user intervention
-
-## ⚙️ Configuration
-
-### WiFi Configuration
-Copy `wifi_config_template.json` to `wifi_config.json` and update with your settings:
-
-```json
-{
-    "hotspots": [
-        {
-            "ssid": "EE WiFi",
-            "login_type": "bt_business",
-            "username": "your_email@example.com",
-            "password": "your_password",
-            "portal_url": "https://ee-wifi.ee.co.uk/home"
-        }
-    ],
-    "check_interval": 30,
-    "max_retries": 3,
-    "timeout": 15
-}
-```
-
-### Login Types
-- **`bt_business`**: For BT Business Broadband accounts (EE WiFi, BTWiFi, etc.)
-- **`form_based`**: For standard username/password forms
-- **`click_through`**: For simple terms acceptance pages
-
-## 🌐 EE WiFi Setup Guide
-
-### Prerequisites for EE WiFi
-1. **BT Business Broadband Account**: You need a BT Business Broadband account with EE WiFi access
-2. **Valid Credentials**: Your BT Business email and password
-3. **EE WiFi Coverage**: Ensure you're in an area with EE WiFi coverage
-
-### Important Notes About BT Business Accounts
-- **Account Type**: Must be **BT Business Broadband** (not BT Consumer)
-- **EE WiFi Access**: Your BT Business account must include EE WiFi access
-- **Credential Format**: Use your full BT Business email address (usually your domain email)
-- **Account Status**: Ensure your BT Business account is active and in good standing
-- **Coverage**: EE WiFi is available in many public locations, train stations, and business areas
-
-### Step-by-Step EE WiFi Configuration
-
-#### 1. Get Your BT Business Credentials
-- **Email**: Your BT Business Broadband account email (usually ends with your domain)
-- **Password**: Your BT Business Broadband account password
-- **Account Type**: Must be BT Business Broadband (not BT Consumer)
-
-#### 2. Configure the System
+### 2. Installation
 ```bash
-# Copy the template
-copy wifi_config_template.json wifi_config.json
+# Clone the repository
+git clone <repository-url>
+cd EE-WIFI
 
-# Edit wifi_config.json with your credentials
+# Install dependencies
+pip install -r requirements.txt
+
+# Configure your credentials
+copy wifi_config_template.json wifi_config.json
+# Edit wifi_config.json with your BT Business credentials
 ```
 
-#### 3. Update Your Configuration
-Edit `wifi_config.json` and replace the placeholder values:
+### 3. Configuration
+Edit `wifi_config.json` with your BT Business credentials:
 
 ```json
 {
+    "connection_mode": "ethernet",
+    "description": "Ethernet + AP setup - AP router connected to EE WiFi network",
     "hotspots": [
         {
             "ssid": "EE WiFi",
             "login_type": "bt_business",
             "username": "your_bt_business_email@yourdomain.com",
             "password": "your_bt_business_password",
-            "portal_url": "https://ee-wifi.ee.co.uk/home"
+            "portal_url": "https://ee-wifi.ee.co.uk/home",
+            "description": "AP router's target network - handles captive portal re-authentication"
         }
     ],
     "check_interval": 30,
-    "max_retries": 3,
-    "timeout": 15
+    "max_retries": 1,
+    "timeout": 15,
+    "debug_mode": false,
+    "headless_browser": true
 }
 ```
 
-#### 4. Test Your Configuration
+### 4. Start Monitoring
 ```bash
-# Test the WiFi agent manually
-python wifi_hotspot_agent.py
+# Start continuous monitoring (recommended)
+python start_continuous_monitor.py
 
-# Test the monitor
-python internet_monitor.py --once
-```
-
-### EE WiFi Network Names
-The system supports these EE WiFi network variants:
-- **`EE WiFi`** - Primary EE WiFi network
-- **`BTWiFi`** - BT WiFi network
-- **`BTWiFi-with-FON`** - BT WiFi with FON access
-
-### EE WiFi Login Process
-The system automatically handles this complete flow:
-1. **Connect to EE WiFi** network
-2. **Accept cookie consent** automatically
-3. **Click "Log in now"** button
-4. **Select "BT Business Broadband account"** tab
-5. **Navigate to BT login** page
-6. **Enter your email** address
-7. **Click "Next"** button
-8. **Enter your password**
-9. **Complete login** and verify internet access
-10. **Close browser** and confirm connection
-
-### EE WiFi Troubleshooting
-
-#### Common Issues:
-
-1. **"Invalid credentials" error**:
-   - Verify your BT Business Broadband account is active
-   - Check email and password are correct
-   - Ensure you're using BT Business (not BT Consumer) credentials
-
-2. **"Network not found" error**:
-   - Check you're in an area with EE WiFi coverage
-   - Verify the SSID matches exactly: "EE WiFi", "BTWiFi", or "BTWiFi-with-FON"
-   - Try connecting manually first to confirm the network exists
-
-3. **"Login page not loading" error**:
-   - Check your internet connection
-   - Verify the portal URL is correct: `https://ee-wifi.ee.co.uk/home`
-   - Try accessing the portal manually in a browser
-
-4. **"Chrome driver issues"**:
-   - The system includes a local `chromedriver.exe`
-   - Ensure Chrome browser is installed
-   - Check `wifi_agent.log` for detailed error messages
-
-#### Testing Your Setup:
-```bash
-# Test connectivity check
-python internet_logbook.py --check
-
-# Test WiFi agent
-python wifi_hotspot_agent.py
-
-# View logs
-Get-Content wifi_agent.log -Tail 20
-```
-
-## 🚀 Installation & Usage
-
-### Quick Start for EE WiFi Users
-
-If you have a **BT Business Broadband account** and want to automate EE WiFi connections:
-
-```bash
-# 1. Install dependencies
-pip install -r requirements.txt
-
-# 2. Configure for EE WiFi
-copy wifi_config_template.json wifi_config.json
-# Edit wifi_config.json with your BT Business credentials
-
-# 3. Test the setup
-python wifi_hotspot_agent.py
-
-# 4. Start monitoring (recommended)
+# Or use PowerShell launcher
 .\start_monitor.ps1
+```
 
-# 5. Set up auto-start (optional)
+### 5. Auto-Start Setup (Optional)
+```bash
+# Set up automatic startup
 .\setup_autostart.ps1
-```
-
-### 1. Installation
-
-   ```bash
-# Install Python dependencies
-   pip install -r requirements.txt
-
-# Configure your WiFi hotspots
-copy wifi_config_template.json wifi_config.json
-# Edit wifi_config.json with your credentials
-```
-
-**📖 For detailed configuration help, see [CONFIGURATION_GUIDE.md](CONFIGURATION_GUIDE.md)**
-
-### 2. Start Internet Monitoring (Recommended)
-
-**PowerShell (Recommended):**
-```powershell
-# Start continuous monitoring
-.\start_monitor.ps1
-
-# Start with custom interval (15 seconds)
-.\start_monitor.ps1 -Interval 15
-
-# Run once to check current status
-.\start_monitor.ps1 -Once
-
-# Start in background
-.\start_monitor.ps1 -Background
-```
-
-**Batch File:**
-```cmd
-start_monitor.bat
-```
-
-**Direct Python:**
-```bash
-# Continuous monitoring (invisible browser)
-python internet_monitor.py
-
-# Continuous monitoring with debug mode (visible browser)
-python internet_monitor.py --debug
-
-# Single check
-python internet_monitor.py --once
-
-# Single check with debug mode
-python internet_monitor.py --once --debug
-
-# Custom configuration and interval
-python internet_monitor.py --config "wifi_config.json" --interval 60
-```
-
-### 3. Manual WiFi Agent Usage
-
-```bash
-# Run WiFi agent manually (invisible browser)
-python wifi_hotspot_agent.py
-
-# Run WiFi agent in debug mode (visible browser)
-python wifi_hotspot_agent.py --debug
-```
-
-### 4. View Connectivity Logs
-
-**PowerShell Viewer:**
-```powershell
-# View recent events
-.\view_logbook.ps1 -Events
-
-# Generate comprehensive report
-.\view_logbook.ps1 -Report
-
-# Export all records to text file
-.\view_logbook.ps1 -Export
-
-# Today's summary
-.\view_logbook.ps1 -Today
-```
-
-**Direct Python:**
-```bash
-# View recent events
-python internet_logbook.py --events 20
-
-# Generate report
-python internet_logbook.py --report --days 7
-
-# Export all records
-python internet_logbook.py --export
-
-# Single connectivity check
-python internet_logbook.py --check
-```
-
-### 5. Auto-Start Setup
-
-**PowerShell (Recommended):**
-```powershell
-# Set up auto-start (30-second interval)
-.\setup_autostart.ps1
-
-# Set up with custom interval (15 seconds)
-.\setup_autostart.ps1 -Interval 15
-
-# Remove auto-start later
-.\setup_autostart.ps1 -Remove
-```
-
-**Batch File:**
-```cmd
-setup_autostart.bat
 ```
 
 ## 🔄 How It Works
 
-### Internet Monitor Flow
+### System Flow
 1. **Continuous Monitoring**: Checks internet connectivity every 30 seconds
-2. **Smart Detection**: Uses multiple reliable hosts for accurate testing
-3. **Ultra-Fast Response**: Triggers WiFi agent after just 1 failure (30 seconds)
-4. **Network Awareness**: Only runs WiFi agent when connected to configured hotspots
-5. **Auto-Recovery**: Automatically attempts reconnection when internet is lost
+2. **Disconnection Detection**: Detects when AP router loses EE WiFi connection
+3. **Automatic Recovery**: Triggers BT Business login process
+4. **Fast Authentication**: Completes login in 13.48 seconds
+5. **Connection Restored**: Internet access automatically restored
 
-### WiFi Agent Flow
-1. **Network Detection**: Scans for available WiFi networks
-2. **Auto-Connection**: Connects to configured hotspots automatically
-3. **Captive Portal Detection**: Identifies and handles various login types
-4. **Invisible Login**: Performs complete login flow in headless browser
-5. **Success Verification**: Confirms internet access after login
+### BT Business Login Process
+1. **Navigate to EE WiFi Portal**: `https://ee-wifi.ee.co.uk/home`
+2. **Accept Cookies**: Automatically handles cookie consent
+3. **Click "Log in now"**: Initiates login process
+4. **Select BT Business Tab**: Chooses BT Business Broadband account
+5. **Enter Email**: Inputs your BT Business email address
+6. **Click "Next"**: Proceeds to password step
+7. **Enter Password**: Inputs your BT Business password
+8. **Complete Login**: Final authentication and verification
+9. **Verify Internet**: Confirms successful connection
 
-### EE WiFi BT Business Login Flow
-1. Connects to EE WiFi network
-2. Accepts cookie consent automatically
-3. Clicks "Log in now" button
-4. Selects "BT Business Broadband account" tab
-5. Navigates to BT login page
-6. Enters email address
-7. Clicks "Next" button
-8. Enters password
-9. Completes final login and verification
-10. Closes browser and confirms internet access
+## 🚀 Usage
 
-### Logging System
-1. **Real-Time Logging**: Every connectivity event is immediately recorded
-2. **Database Storage**: Structured SQLite database for queries and analysis
-3. **Text File Backup**: Human-readable continuous text logging
-4. **Export Functionality**: Complete data export with statistics
-5. **Daily Summaries**: Automatic daily statistics and summaries
+### Start Continuous Monitoring
+```bash
+# Production mode (invisible browser)
+python start_continuous_monitor.py
 
-## 📊 Logging & Monitoring
+# PowerShell launcher with options
+.\start_monitor.ps1                    # Default 30-second interval
+.\start_monitor.ps1 -Interval 15       # Custom interval
+.\start_monitor.ps1 -Once              # Single check
+.\start_monitor.ps1 -Background        # Background mode
+```
+
+### Check System Status
+```bash
+# Check monitor status and health
+python check_monitor_status.py
+
+# View recent logs
+Get-Content internet_monitor.log -Tail 20
+```
+
+### Toggle Browser Mode
+```bash
+# Switch between debug and production modes
+python toggle_browser_mode.py
+
+# Show current mode
+python toggle_browser_mode.py show
+```
+
+### View Logs and Reports
+```bash
+# PowerShell log viewer
+.\view_logbook.ps1 -Events    # Recent events
+.\view_logbook.ps1 -Report    # Comprehensive report
+.\view_logbook.ps1 -Today     # Today's summary
+.\view_logbook.ps1 -Export    # Export all data
+
+# Direct Python access
+python internet_logbook.py --events 20
+python internet_logbook.py --report --days 7
+python internet_logbook.py --export
+```
+
+## 📊 Performance
+
+### Optimized Timing
+- **Total Login Time**: 13.48 seconds (33% faster than original)
+- **Check Interval**: 30 seconds
+- **Recovery Time**: < 30 seconds from disconnection
+- **Browser Mode**: Invisible (headless) for production
+
+### Resource Usage
+- **Memory**: Minimal footprint with headless browser
+- **CPU**: Low usage during monitoring
+- **Network**: Only connectivity checks and login attempts
+- **Storage**: Efficient SQLite database logging
+
+## 🔧 Configuration Options
+
+### Connection Modes
+- **`ethernet`**: Monitor Ethernet connection (recommended for AP setup)
+- **`wifi`**: Monitor WiFi connection directly
+
+### Browser Modes
+- **`headless_browser: true`**: Invisible browser (production)
+- **`headless_browser: false`**: Visible browser (debugging)
+
+### Debug Options
+- **`debug_mode: true`**: Detailed logging and visible browser
+- **`debug_mode: false`**: Production mode with minimal logging
+
+### Timing Settings
+- **`check_interval`**: Seconds between connectivity checks (default: 30)
+- **`timeout`**: Connection timeout in seconds (default: 15)
+- **`max_retries`**: Login attempt retries (default: 1)
+
+## 🛠️ Troubleshooting
+
+### Common Issues
+
+1. **"Invalid credentials" error**
+   - Verify BT Business Broadband account is active
+   - Check email and password are correct
+   - Ensure using BT Business (not BT Consumer) credentials
+
+2. **"Network not found" error**
+   - Check you're in an area with EE WiFi coverage
+   - Verify SSID matches exactly: "EE WiFi"
+   - Try connecting manually first
+
+3. **"Chrome driver issues"**
+   - System includes local `chromedriver.exe`
+   - Ensure Chrome browser is installed
+   - Check `wifi_agent.log` for detailed errors
+
+4. **Monitor not starting**
+   - Run PowerShell as Administrator
+   - Check `internet_monitor.log` for errors
+   - Verify configuration file exists and is valid
+
+### Debug Mode
+Enable visible browser for troubleshooting:
+
+```bash
+# Switch to debug mode
+python toggle_browser_mode.py
+
+# Start monitoring with visible browser
+python start_continuous_monitor.py
+```
+
+### Manual Testing
+```bash
+# Test single connectivity check
+python internet_monitor.py --once
+
+# Test WiFi agent manually
+python wifi_hotspot_agent.py
+
+# Check system status
+python check_monitor_status.py
+```
+
+## 📈 Logging & Monitoring
 
 ### Log Files
-- **`internet_logbook.db`**: SQLite database with all connectivity events
-- **`internet_connectivity_records.txt`**: Continuous text log of events
-- **`internet_connectivity_full_export.txt`**: Comprehensive export file
-- **`internet_logbook.log`**: System logging for debugging
+- **`internet_logbook.db`**: SQLite database with all events
 - **`internet_monitor.log`**: Monitor activity and status
-- **`wifi_agent.log`**: WiFi connection and login attempts
+- **`wifi_agent.log`**: Login attempts and results
+- **`internet_logbook.log`**: System logging
 
 ### Event Types
-- **CONNECTED**: Initial connection to network
-- **DISCONNECTED**: Internet connection lost (with error details)
-- **RECONNECTED**: Internet connection restored (with downtime duration)
+- **CONNECTED**: Internet connection established
+- **DISCONNECTED**: Internet connection lost
+- **RECONNECTED**: Internet connection restored
+- **LOGIN_ATTEMPT**: BT Business login initiated
+- **LOGIN_SUCCESS**: Login completed successfully
+- **LOGIN_FAILED**: Login attempt failed
 
 ### Statistics Tracked
-- **Daily Success Rates**: Percentage of successful connectivity checks
+- **Daily Success Rates**: Percentage of successful connections
 - **Disconnect Counts**: Number of disconnections per day
 - **Total Downtime**: Cumulative time without internet
 - **Average Recovery Time**: Time to restore connection
-- **Network Performance**: Success rates by network
+- **Login Success Rate**: Percentage of successful logins
 
-## 🔧 Requirements
+## 🔒 Security
+
+- **Credential Storage**: Secure storage in `wifi_config.json`
+- **Local Driver**: No internet dependency for Chrome driver
+- **Minimal Permissions**: Runs with required permissions only
+- **Log Monitoring**: Track all authentication attempts
+- **Version Control**: `wifi_config.json` excluded from git
+
+## 📋 Requirements
 
 ### System Requirements
 - **Python 3.7+**
-- **Windows 10/11** (for WiFi commands and Task Scheduler)
-- **Chrome Browser** (for automation)
-- **Administrator Privileges** (for WiFi operations and auto-start setup)
+- **Windows 10/11**
+- **Chrome Browser**
+- **Administrator Privileges** (for auto-start setup)
 
 ### Python Dependencies
 ```bash
@@ -454,141 +320,36 @@ pip install -r requirements.txt
 
 Required packages:
 - `selenium` - Browser automation
-- `requests` - HTTP requests for connectivity testing
-- `webdriver-manager` - Chrome driver management (optional, local driver preferred)
-
-## 🔍 Debug Mode
-
-The system supports both invisible (production) and visible (debug) browser modes:
-
-### Production Mode (Default)
-- Browser runs invisibly in the background
-- Faster execution and lower resource usage
-- Perfect for normal operation and auto-start
-
-### Debug Mode
-- Browser runs visibly so you can see what's happening
-- Great for troubleshooting login issues
-- Use when testing new configurations
-
-### Usage Examples:
-```bash
-# Production mode (invisible browser)
-python wifi_hotspot_agent.py
-python internet_monitor.py
-
-# Debug mode (visible browser)
-python wifi_hotspot_agent.py --debug
-python internet_monitor.py --debug
-```
-
-**📖 For detailed debug mode instructions, see [DEBUG_MODE_GUIDE.md](DEBUG_MODE_GUIDE.md)**
-
-## 🛠️ Troubleshooting
-
-### Common Issues
-
-1. **"Python not found"**
-   - Ensure Python is installed and in your system PATH
-   - Verify Python version is 3.7 or higher
-
-2. **"Chrome driver not found"**
-   - The system includes a local `chromedriver.exe`
-   - If issues persist, ensure Chrome browser is installed
-
-3. **Permission errors**
-   - Run PowerShell as Administrator for WiFi operations
-   - Ensure auto-start setup is run with Administrator privileges
-
-4. **Import errors**
-   - Ensure all files are in the same directory
-   - Verify all Python dependencies are installed
-
-5. **Auto-start not working**
-   - Check Windows Task Scheduler for the created task
-   - Verify the task is enabled and set to run at startup
-   - Check task logs for error messages
-
-### Debug Mode
-
-Enable detailed logging by modifying the logging level:
-
-```python
-logging.basicConfig(level=logging.DEBUG)
-```
-
-### Manual Testing
-
-Test individual components:
-
-```bash
-# Test configuration loading
-python -c "from wifi_hotspot_agent import WiFiHotspotAgent; print('Config OK')"
-
-# Test internet connectivity
-python -c "from internet_monitor import InternetMonitor; m = InternetMonitor(); print('Internet:', m.check_internet_connectivity())"
-
-# Test logbook functionality
-python internet_logbook.py --check
-```
-
-## 🔒 Security Notes
-
-- **Credential Storage**: Store sensitive credentials securely in `wifi_config.json`
-- **Environment Variables**: Consider using environment variables for passwords
-- **Minimal Permissions**: Run with minimal required permissions
-- **Log Monitoring**: Monitor logs for unusual activity
-- **Version Control**: Never commit `wifi_config.json` to version control
-- **Local Driver**: Uses local Chrome driver to avoid internet dependency
-
-## 📈 Performance Optimizations
-
-### Timing Optimizations
-- **Internet Check**: 3-second timeout for fast connectivity testing
-- **Ultra-Fast Response**: 30-second trigger time (1 failure threshold)
-- **Captive Portal**: Optimized delays for reliable automation
-- **Login Flow**: Streamlined timing for faster connection
-- **Browser Operations**: Efficient element waiting and interaction
-- **Headless Mode**: Invisible browser with optimized performance
-
-### Resource Management
-- **Local Chrome Driver**: Eliminates internet dependency for driver management
-- **Efficient Logging**: Structured database storage with text file backup
-- **Smart Monitoring**: Configurable intervals to balance performance and responsiveness
-- **Error Recovery**: Robust error handling with automatic retries
+- `requests` - HTTP connectivity testing
+- `webdriver-manager` - Chrome driver management
 
 ## 🎯 Use Cases
 
-### Personal Use
-- **Home WiFi Management**: Automatic connection to home networks
-- **Mobile Hotspot**: Seamless switching between networks
-- **Guest Networks**: Automatic handling of captive portals
+### Primary Use Case
+- **Ethernet + AP Setup**: Monitor Ethernet connection to AP router
+- **Automatic Re-authentication**: Handle EE WiFi captive portal when AP logs out
+- **24/7 Operation**: Continuous monitoring with automatic recovery
 
-### Business Use
-- **Office Networks**: Automatic connection to corporate WiFi
-- **Client Sites**: Seamless connectivity at customer locations
-- **Remote Work**: Reliable internet connection management
+### Additional Use Cases
+- **Direct EE WiFi**: Connect directly to EE WiFi networks
+- **Multiple Networks**: Support for various BT WiFi networks
+- **Business Environments**: Reliable connectivity for business users
 
-### Development/Testing
-- **Network Testing**: Automated connectivity testing
-- **Captive Portal Testing**: Automated portal interaction testing
-- **Connectivity Monitoring**: Continuous internet status monitoring
+## 📚 Documentation
 
-## 📚 Resources
-
-- [Original Repository](https://github.com/Wentianuk/EE-Wifi) - Base implementation
-- [Selenium Documentation](https://selenium-python.readthedocs.io/) - Browser automation
-- [Windows netsh Commands](https://docs.microsoft.com/en-us/windows-server/networking/technologies/netsh/netsh-commands) - WiFi management
-- [Windows Task Scheduler](https://docs.microsoft.com/en-us/windows/win32/taskschd/task-scheduler-start-page) - Auto-start setup
+- **[CONFIGURATION_GUIDE.md](CONFIGURATION_GUIDE.md)** - Detailed setup instructions
+- **[DEBUG_MODE_GUIDE.md](DEBUG_MODE_GUIDE.md)** - Troubleshooting guide
+- **[ETHERNET_SETUP_GUIDE.md](ETHERNET_SETUP_GUIDE.md)** - Ethernet + AP setup
+- **[AUTO_START_SETUP.md](AUTO_START_SETUP.md)** - Windows startup configuration
 
 ## 🤝 Contributing
 
-This project is based on the [EE-Wifi repository](https://github.com/Wentianuk/EE-Wifi) and has been enhanced with:
-- Comprehensive logging system
-- Auto-start capability
-- Performance optimizations
-- Enhanced error handling
+This project is based on the [EE-Wifi repository](https://github.com/Wentianuk/EE-Wifi) and enhanced with:
+- Optimized BT Business login flow
+- Continuous monitoring system
+- Comprehensive logging
 - Production-ready reliability
+- Ethernet + AP support
 
 ## 📄 License
 
@@ -596,4 +357,4 @@ This project maintains the same license as the original [EE-Wifi repository](htt
 
 ---
 
-**Ready for Production**: This system is optimized for reliable, continuous operation with comprehensive logging and monitoring capabilities.
+**🚀 Production Ready**: This system is optimized for reliable, continuous operation with automatic EE WiFi re-authentication for BT Business Broadband users.

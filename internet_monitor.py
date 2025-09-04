@@ -100,25 +100,31 @@ class InternetMonitor:
                 
         return False
         
-    def get_current_wifi_network(self) -> Optional[str]:
-        """Get the currently connected WiFi network name."""
+    def get_current_connection_type(self) -> str:
+        """Get the current connection type (Ethernet or WiFi)."""
         try:
+            # Check Ethernet connection status
             result = subprocess.run(
-                ['netsh', 'wlan', 'show', 'interfaces'],
+                ['netsh', 'interface', 'show', 'interface'],
                 capture_output=True,
                 text=True,
                 check=True
             )
             
             for line in result.stdout.split('\n'):
-                if 'Profile' in line and ':' in line:
-                    network = line.split(':')[1].strip()
-                    if network and network != 'Not configured':
-                        return network
-                        
+                if 'Ethernet' in line and 'Connected' in line:
+                    return "Ethernet"
+                elif 'Wi-Fi' in line and 'Connected' in line:
+                    return "WiFi"
+                    
         except subprocess.CalledProcessError as e:
-            self.logger.error(f"Failed to get current WiFi network: {e}")
+            self.logger.error(f"Failed to get connection type: {e}")
             
+        return "Unknown"
+        
+    def get_current_wifi_network(self) -> Optional[str]:
+        """Get the currently connected WiFi network name (disabled for Ethernet mode)."""
+        # WiFi is disabled, always return None to indicate we're using Ethernet
         return None
         
     def is_configured_hotspot(self, network_name: str) -> bool:
@@ -137,9 +143,8 @@ class InternetMonitor:
             # Import and run the WiFi agent
             from wifi_hotspot_agent import WiFiHotspotAgent
             
-            # Set headless mode: False for debug (visible), True for production (invisible)
-            headless = not self.debug
-            agent = WiFiHotspotAgent(self.config_file, headless=headless)
+            # Let the agent read debug settings from config file
+            agent = WiFiHotspotAgent(self.config_file)
             success = agent.run()
             
             if success:
@@ -162,7 +167,7 @@ class InternetMonitor:
         self.logger.info("Checking internet connectivity...")
         
         is_connected = self.check_internet_connectivity()
-        current_network = self.get_current_wifi_network()
+        connection_type = self.get_current_connection_type()
         
         # Log to logbook if available
         if self.logbook:
@@ -176,13 +181,14 @@ class InternetMonitor:
             self.failure_count += 1
             self.logger.warning(f"Internet not available (failure #{self.failure_count})")
             
-            # Only run WiFi agent if we're on a configured hotspot or no specific network
-            if current_network is None or self.is_configured_hotspot(current_network):
+            # For Ethernet mode, always run the agent when internet fails
+            # This handles AP router logouts from EE WiFi network
+            if connection_type == "Ethernet":
                 if self.failure_count >= 1:  # Trigger after 1st failure (30 seconds)
-                    self.logger.info(f"Reached {self.failure_count} consecutive failures. Running WiFi agent...")
+                    self.logger.info(f"Reached {self.failure_count} consecutive failures. Running WiFi agent for AP re-authentication...")
                     return self.run_wifi_agent()
             else:
-                self.logger.info(f"Connected to {current_network} (not a configured hotspot). Skipping WiFi agent.")
+                self.logger.info(f"Connection type: {connection_type}. Skipping WiFi agent.")
                 
         return False
         
