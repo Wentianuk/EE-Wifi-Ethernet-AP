@@ -1,0 +1,54 @@
+---
+description: Web server configuration and Cloudflare tunnel integration
+---
+
+# Web Server and Cloudflare Tunnel Setup
+
+## Web Server Components
+
+### Python HTTP Server ([web_server.py](mdc:web_server.py))
+- Simple HTTP server for port 80
+- Serves custom HTML content
+- Handles connection errors gracefully
+- Provides detailed error messages for port conflicts
+
+### Port Management ([kill_port80_and_start_server.py](mdc:kill_port80_and_start_server.py))
+- Automatically kills processes using port 80
+- Starts Python web server on port 80
+- Handles permission errors and port conflicts
+- Provides fallback options
+
+### Simplified Server ([start_port80_server.py](mdc:start_port80_server.py))
+- Lightweight HTTP server implementation
+- Focused on port 80 operation
+- Minimal error handling for testing
+
+## Cloudflare Tunnel Integration
+
+### Tunnel Client ([cloudflared.exe](mdc:cloudflared.exe))
+- Cloudflare tunnel executable
+- Connects local port 80 to web.190801.xyz
+- Runs as Windows service
+- Handles SSL termination
+
+### Service Management
+- [reinstall_cloudflared.ps1](mdc:reinstall_cloudflared.ps1) - PowerShell service management
+- [reinstall_cloudflared.bat](mdc:reinstall_cloudflared.bat) - Batch service management
+- Requires administrator privileges for service operations
+
+## Firewall Configuration
+- [fix_firewall.ps1](mdc:fix_firewall.ps1) - PowerShell firewall rules
+- [fix_firewall.bat](mdc:fix_firewall.bat) - Batch firewall rules
+- Opens ports 80 and 443 for external access
+- Allows Nginx and Python server traffic
+
+## Startup Scripts
+- [start_python_server_admin.bat](mdc:start_python_server_admin.bat) - Admin-privileged server start
+- [start_server_simple.bat](mdc:start_server_simple.bat) - Simple server startup
+- [start_port80_server.py](mdc:start_port80_server.py) - Direct server execution
+
+## Troubleshooting
+- Check port 80 availability with `netstat -ano`
+- Verify firewall rules are active
+- Ensure Cloudflare tunnel service is running
+- Test local access before external access

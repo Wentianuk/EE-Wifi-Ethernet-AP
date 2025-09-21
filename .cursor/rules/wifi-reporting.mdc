@@ -1,0 +1,66 @@
+---
+description: WiFi reporting system and command-line tools
+---
+
+# WiFi Reporting System
+
+## Report Generator ([wifi_report.py](mdc:wifi_report.py))
+- Parses connectivity records from [internet_connectivity_records.txt](mdc:internet_connectivity_records.txt)
+- Generates comprehensive WiFi stability reports
+- Calculates statistics and trends
+- Provides daily breakdowns with timestamps
+
+## Command-Line Interfaces
+
+### Direct Command ([wifi_report.cmd](mdc:wifi_report.cmd))
+- Simple command-line interface
+- Usage: `wifi_report [days]`
+- Default: 7 days
+- Changes to project directory automatically
+
+### PowerShell Function ([wifi_report_function.ps1](mdc:wifi_report_function.ps1))
+- PowerShell function for `/wifi_report` syntax
+- Can be loaded into PowerShell profile
+- Provides persistent command availability
+- Handles directory changes and error recovery
+
+### Batch Interface ([wifi_report.bat](mdc:wifi_report.bat))
+- Interactive batch interface
+- Shows usage instructions
+- Provides user-friendly error messages
+- Includes pause for user interaction
+
+## Report Features
+- **Daily Breakdown**: Events organized by date
+- **Statistics**: Total disconnections, downtime, averages
+- **Timeline**: Detailed event log with reconnection times
+- **Summary**: Longest/shortest downtimes, daily averages
+- **Network Analysis**: Shows which networks were used
+
+## Data Parsing
+- **Event Types**: CONNECTED, DISCONNECTED, RECONNECTED
+- **Timestamp Parsing**: YYYY-MM-DD HH:MM:SS format
+- **Downtime Calculation**: Extracted from reconnection events
+- **Network Information**: Network names and details
+
+## Usage Examples
+```bash
+# Last 7 days (default)
+wifi_report
+
+# Last 3 days
+wifi_report 3
+
+# Last 30 days
+wifi_report 30
+
+# Last 24 hours
+wifi_report 1
+```
+
+## Output Format
+- Structured report with clear sections
+- Color-coded emojis for visual clarity
+- Statistical summaries and trends
+- Detailed event timelines
+- Network usage analysis

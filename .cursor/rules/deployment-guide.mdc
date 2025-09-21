@@ -1,0 +1,68 @@
+---
+description: Deployment and setup procedures for EE WiFi system
+---
+
+# EE WiFi System Deployment Guide
+
+## Initial Setup
+
+### Prerequisites
+- Python 3.x installed
+- Windows 10/11 with PowerShell
+- Administrator privileges for service installation
+- Internet connection for Cloudflare tunnel
+
+### Installation Steps
+1. **Install Dependencies**: `pip install -r [requirements.txt](mdc:requirements.txt)`
+2. **Configure WiFi**: Copy [wifi_config_template.json](mdc:wifi_config_template.json) to [wifi_config.json](mdc:wifi_config.json)
+3. **Setup Auto-start**: Run [setup_autostart.bat](mdc:setup_autostart.bat) as administrator
+4. **Configure Firewall**: Run [fix_firewall.bat](mdc:fix_firewall.bat) as administrator
+
+## Service Management
+
+### Cloudflare Tunnel
+- **Install**: `cloudflared.exe service install [token]`
+- **Reinstall**: Run [reinstall_cloudflared.bat](mdc:reinstall_cloudflared.bat) as administrator
+- **Status**: Check Windows Services for "Cloudflared" service
+- **Logs**: Check Windows Event Viewer for service logs
+
+### WiFi Monitoring
+- **Start**: Run [start_monitor.bat](mdc:start_monitor.bat)
+- **Status**: Run [check_monitor_status.py](mdc:check_monitor_status.py)
+- **Logs**: Check [internet_monitor.log](mdc:internet_monitor.log)
+
+## Web Server Deployment
+
+### Python Server
+- **Start**: Run [start_python_server_admin.bat](mdc:start_python_server_admin.bat) as administrator
+- **Test**: Access `http://localhost` or `https://web.190801.xyz`
+- **Stop**: Use Ctrl+C or kill Python processes
+
+### Port Management
+- **Check Port 80**: `netstat -ano | findstr :80`
+- **Kill Process**: Use [kill_port80_and_start_server.py](mdc:kill_port80_and_start_server.py)
+- **Firewall**: Ensure ports 80 and 443 are open
+
+## Monitoring and Maintenance
+
+### Regular Tasks
+- **Check Logs**: Review [internet_connectivity_records.txt](mdc:internet_connectivity_records.txt)
+- **Generate Reports**: Use [wifi_report.cmd](mdc:wifi_report.cmd) for analysis
+- **Service Status**: Verify Cloudflare tunnel and monitoring services
+- **Disk Space**: Monitor log file sizes
+
+### Troubleshooting
+- **Connection Issues**: Check firewall rules and port availability
+- **Service Problems**: Restart services or reinstall as needed
+- **Log Analysis**: Use reporting tools to identify patterns
+- **Network Issues**: Verify WiFi configuration and connectivity
+
+## Configuration Files
+- **Main Config**: [wifi_config.json](mdc:wifi_config.json)
+- **Dependencies**: [requirements.txt](mdc:requirements.txt)
+- **Templates**: [wifi_config_template.json](mdc:wifi_config_template.json)
+
+## Documentation
+- **Setup Guides**: [AUTO_START_SETUP.md](mdc:AUTO_START_SETUP.md), [CONFIGURATION_GUIDE.md](mdc:CONFIGURATION_GUIDE.md)
+- **Debugging**: [DEBUG_MODE_GUIDE.md](mdc:DEBUG_MODE_GUIDE.md)
+- **Network Setup**: [ETHERNET_SETUP_GUIDE.md](mdc:ETHERNET_SETUP_GUIDE.md), [WIFI_SHARING_GUIDE.md](mdc:WIFI_SHARING_GUIDE.md)

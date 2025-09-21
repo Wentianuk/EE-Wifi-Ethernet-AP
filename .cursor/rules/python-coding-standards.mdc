@@ -1,0 +1,51 @@
+---
+globs: *.py
+description: Python coding standards and patterns for EE WiFi project
+---
+
+# Python Coding Standards
+
+## Code Style
+- Use descriptive variable names (e.g., `connectivity_records`, `downtime_seconds`)
+- Include comprehensive docstrings for all functions and classes
+- Use type hints where appropriate
+- Follow PEP 8 formatting guidelines
+
+## Error Handling
+- Always use try-except blocks for file operations and network requests
+- Provide meaningful error messages with context
+- Log errors to appropriate log files
+- Handle specific exceptions (e.g., `socket.error`, `FileNotFoundError`)
+
+## Logging Patterns
+- Use structured logging with timestamps
+- Include relevant context in log messages
+- Use appropriate log levels (INFO, WARNING, ERROR)
+- Format log entries consistently: `[EVENT_TYPE] YYYY-MM-DD HH:MM:SS | Details`
+
+## Network Operations
+- Always handle network timeouts and connection errors
+- Use appropriate retry mechanisms for transient failures
+- Validate network responses before processing
+- Include network status in error messages
+
+## File Operations
+- Always check file existence before operations
+- Use context managers (`with` statements) for file handling
+- Handle file permission errors gracefully
+- Create backup copies of critical configuration files
+
+## Example Patterns
+```python
+def parse_log_entry(line):
+    """Parse a log entry and extract relevant information"""
+    try:
+        # Pattern matching with error handling
+        pattern = r'\[(CONNECTED|DISCONNECTED|RECONNECTED)\] (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})'
+        match = re.match(pattern, line)
+        if match:
+            return parse_successful_match(match)
+    except Exception as e:
+        logging.error(f"Error parsing log entry: {e}")
+        return None
+```

@@ -1,0 +1,157 @@
+#!/usr/bin/env python3
+"""
+WiFi Disconnection and Connection Report Generator
+Usage: python wifi_report.py [days]
+"""
+
+import sys
+import os
+import re
+from datetime import datetime, timedelta
+from collections import defaultdict
+
+def parse_log_entry(line):
+    """Parse a log entry and extract relevant information"""
+    # Pattern for connectivity records
+    pattern = r'\[(CONNECTED|DISCONNECTED|RECONNECTED)\] (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) \| Network: ([^|]+)(?:\| (.*))?'
+    match = re.match(pattern, line)
+    
+    if match:
+        event_type = match.group(1)
+        timestamp = datetime.strptime(match.group(2), '%Y-%m-%d %H:%M:%S')
+        network = match.group(3).strip()
+        details = match.group(4).strip() if match.group(4) else ""
+        
+        # Extract downtime for reconnections
+        downtime = None
+        if event_type == 'RECONNECTED' and 'Downtime:' in details:
+            downtime_match = re.search(r'Downtime: (\d+) seconds', details)
+            if downtime_match:
+                downtime = int(downtime_match.group(1))
+        
+        return {
+            'type': event_type,
+            'timestamp': timestamp,
+            'network': network,
+            'details': details,
+            'downtime': downtime
+        }
+    return None
+
+def load_connectivity_data(days=7):
+    """Load connectivity data from the log file"""
+    records = []
+    
+    if not os.path.exists('internet_connectivity_records.txt'):
+        print("❌ Error: internet_connectivity_records.txt not found")
+        return records
+    
+    cutoff_date = datetime.now() - timedelta(days=days)
+    
+    try:
+        with open('internet_connectivity_records.txt', 'r') as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                
+                entry = parse_log_entry(line)
+                if entry and entry['timestamp'] >= cutoff_date:
+                    records.append(entry)
+    except Exception as e:
+        print(f"❌ Error reading connectivity records: {e}")
+    
+    return records
+
+def generate_report(records, days=7):
+    """Generate a comprehensive WiFi report"""
+    if not records:
+        print(f"📊 No connectivity data found for the last {days} days")
+        return
+    
+    # Group by date
+    daily_data = defaultdict(list)
+    for record in records:
+        date_key = record['timestamp'].date()
+        daily_data[date_key].append(record)
+    
+    # Calculate statistics
+    total_disconnections = len([r for r in records if r['type'] == 'DISCONNECTED'])
+    total_reconnections = len([r for r in records if r['type'] == 'RECONNECTED'])
+    total_downtime = sum([r['downtime'] for r in records if r['downtime']])
+    
+    # Print header
+    print("=" * 80)
+    print("📊 WIFI DISCONNECTION & CONNECTION REPORT")
+    print("=" * 80)
+    print(f"📅 Period: Last {days} days")
+    print(f"📈 Total Disconnections: {total_disconnections}")
+    print(f"🔄 Total Reconnections: {total_reconnections}")
+    print(f"⏱️  Total Downtime: {total_downtime} seconds ({total_downtime/60:.1f} minutes)")
+    print("=" * 80)
+    
+    # Daily breakdown
+    print("\n📋 DAILY BREAKDOWN:")
+    print("-" * 80)
+    
+    for date in sorted(daily_data.keys(), reverse=True):
+        day_records = daily_data[date]
+        day_disconnections = len([r for r in day_records if r['type'] == 'DISCONNECTED'])
+        day_downtime = sum([r['downtime'] for r in day_records if r['downtime']])
+        
+        print(f"\n📅 {date.strftime('%Y-%m-%d (%A)')}")
+        print(f"   Disconnections: {day_disconnections}")
+        print(f"   Downtime: {day_downtime} seconds ({day_downtime/60:.1f} minutes)")
+        
+        # Show detailed events for this day
+        if day_records:
+            print("   Events:")
+            for record in sorted(day_records, key=lambda x: x['timestamp']):
+                time_str = record['timestamp'].strftime('%H:%M:%S')
+                if record['type'] == 'DISCONNECTED':
+                    print(f"     ❌ {time_str} - DISCONNECTED")
+                elif record['type'] == 'RECONNECTED':
+                    downtime_str = f" (Downtime: {record['downtime']}s)" if record['downtime'] else ""
+                    print(f"     ✅ {time_str} - RECONNECTED{downtime_str}")
+                elif record['type'] == 'CONNECTED':
+                    print(f"     🔗 {time_str} - CONNECTED")
+    
+    # Summary statistics
+    print("\n" + "=" * 80)
+    print("📊 SUMMARY STATISTICS:")
+    print("-" * 80)
+    
+    if total_disconnections > 0:
+        avg_downtime = total_downtime / total_disconnections
+        print(f"📉 Average Downtime per Disconnection: {avg_downtime:.1f} seconds")
+        print(f"📊 Disconnections per Day: {total_disconnections/days:.1f}")
+        print(f"⏱️  Downtime per Day: {total_downtime/days:.1f} seconds ({total_downtime/days/60:.1f} minutes)")
+    
+    # Find longest and shortest downtimes
+    downtimes = [r['downtime'] for r in records if r['downtime']]
+    if downtimes:
+        print(f"⏰ Longest Downtime: {max(downtimes)} seconds ({max(downtimes)/60:.1f} minutes)")
+        print(f"⚡ Shortest Downtime: {min(downtimes)} seconds")
+    
+    # Network analysis
+    networks = set([r['network'] for r in records])
+    print(f"🌐 Networks Used: {', '.join(networks) if networks else 'None detected'}")
+    
+    print("=" * 80)
+
+def main():
+    """Main function"""
+    days = 7
+    if len(sys.argv) > 1:
+        try:
+            days = int(sys.argv[1])
+        except ValueError:
+            print("❌ Error: Please provide a valid number of days")
+            sys.exit(1)
+    
+    print(f"🔍 Loading WiFi connectivity data for the last {days} days...")
+    records = load_connectivity_data(days)
+    generate_report(records, days)
+
+if __name__ == "__main__":
+    main()

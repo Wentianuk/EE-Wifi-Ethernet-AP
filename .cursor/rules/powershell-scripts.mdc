@@ -1,0 +1,51 @@
+---
+globs: *.ps1,*.bat
+description: PowerShell and batch script standards for EE WiFi project
+---
+
+# PowerShell and Batch Script Standards
+
+## PowerShell Scripts (.ps1)
+- Use `Write-Host` with color coding for user feedback
+- Include error handling with `try-catch` blocks
+- Use `Set-Location` to ensure correct working directory
+- Provide clear usage instructions and examples
+- Use parameter validation and help documentation
+
+## Batch Scripts (.bat)
+- Include `@echo off` at the beginning
+- Use descriptive echo statements for user feedback
+- Handle error levels with `if %errorlevel%` checks
+- Use `cd /d` for directory changes with drive support
+- Include pause statements for user interaction when needed
+
+## Common Patterns
+- Always change to the project directory: `cd /d "C:\Users\Berries\Documents\EE WIFI"`
+- Check for administrator privileges when needed
+- Provide fallback options for common errors
+- Use consistent error messaging format
+
+## Service Management
+- Use `Stop-Service` and `Start-Service` for Windows services
+- Include service status checks before operations
+- Handle service installation/uninstallation errors
+- Use `sc.exe` for advanced service operations
+
+## Firewall Rules
+- Use `New-NetFirewallRule` for PowerShell firewall management
+- Use `netsh advfirewall` for batch script firewall rules
+- Always check if rules already exist before creating
+- Include descriptive rule names and comments
+
+## Example Patterns
+```powershell
+try {
+    Write-Host "Starting operation..." -ForegroundColor Green
+    Set-Location "C:\Users\Berries\Documents\EE WIFI"
+    # Operation code here
+} catch {
+    Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Red
+} finally {
+    Write-Host "Operation complete!" -ForegroundColor Green
+}
+```

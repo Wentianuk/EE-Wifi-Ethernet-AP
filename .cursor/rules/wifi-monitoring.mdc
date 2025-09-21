@@ -1,0 +1,48 @@
+---
+description: WiFi monitoring system architecture and data flow
+---
+
+# WiFi Monitoring System Architecture
+
+## Core Components
+
+### Internet Monitor ([internet_monitor.py](mdc:internet_monitor.py))
+- Continuously monitors internet connectivity
+- Records connection/disconnection events
+- Writes to [internet_connectivity_records.txt](mdc:internet_connectivity_records.txt)
+- Handles network timeouts and retry logic
+
+### Logbook System ([internet_logbook.py](mdc:internet_logbook.py))
+- Manages connectivity event database
+- Provides querying and reporting capabilities
+- Stores detailed event information with timestamps
+- Handles data persistence and retrieval
+
+### WiFi Agent ([wifi_hotspot_agent.py](mdc:wifi_hotspot_agent.py))
+- Manages WiFi hotspot functionality
+- Handles network configuration changes
+- Monitors WiFi adapter status
+- Provides hotspot management capabilities
+
+## Data Flow
+1. **Monitoring**: [internet_monitor.py](mdc:internet_monitor.py) checks connectivity
+2. **Recording**: Events written to [internet_connectivity_records.txt](mdc:internet_connectivity_records.txt)
+3. **Storage**: [internet_logbook.py](mdc:internet_logbook.py) manages database storage
+4. **Reporting**: [wifi_report.py](mdc:wifi_report.py) generates analysis reports
+
+## Log Format Standards
+- **Event Types**: CONNECTED, DISCONNECTED, RECONNECTED
+- **Timestamp Format**: YYYY-MM-DD HH:MM:SS
+- **Network Info**: Network name and details
+- **Downtime**: Calculated for reconnection events
+
+## Configuration Management
+- Main config: [wifi_config.json](mdc:wifi_config.json)
+- Template: [wifi_config_template.json](mdc:wifi_config_template.json)
+- Dependencies: [requirements.txt](mdc:requirements.txt)
+
+## Startup and Management
+- Batch startup: [start_monitor.bat](mdc:start_monitor.bat)
+- PowerShell startup: [start_monitor.ps1](mdc:start_monitor.ps1)
+- Auto-start setup: [setup_autostart.bat](mdc:setup_autostart.bat)
+- Status checking: [check_monitor_status.py](mdc:check_monitor_status.py)

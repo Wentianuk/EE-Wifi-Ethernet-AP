@@ -142,27 +142,46 @@ class WiFiHotspotAgent:
     def check_internet_connectivity(self) -> bool:
         """Check if internet is accessible."""
         import requests
+        import time
         
         test_urls = [
-            'http://www.google.com',  # Use HTTP first for captive portal detection
-            'https://8.8.8.8',
-            'https://1.1.1.1',
-            'https://www.google.com'
+            'https://8.8.8.8',        # Google DNS - more reliable
+            'https://1.1.1.1',        # Cloudflare DNS
+            'https://www.google.com', # Google
+            'http://www.google.com'   # HTTP fallback for captive portal detection
         ]
         
-        for url in test_urls:
-            try:
-                self.logger.debug(f"Testing connectivity to {url}")
-                response = requests.get(url, timeout=3, allow_redirects=False)
-                self.logger.debug(f"Response status: {response.status_code}")
-                if response.status_code == 200:
-                    self.logger.info(f"Internet connectivity confirmed via {url}")
-                    return True
-            except Exception as e:
-                self.logger.debug(f"Failed to connect to {url}: {e}")
-                continue
+        # Try multiple times with increasing delays to handle post-login delays
+        for attempt in range(3):
+            if attempt > 0:
+                wait_time = attempt * 2  # 2, 4 seconds
+                self.logger.debug(f"Waiting {wait_time} seconds before retry {attempt + 1}")
+                time.sleep(wait_time)
+            
+            for url in test_urls:
+                try:
+                    self.logger.debug(f"Testing connectivity to {url} (attempt {attempt + 1})")
+                    response = requests.get(url, timeout=5, allow_redirects=False)
+                    self.logger.debug(f"Response status: {response.status_code}")
+                    if response.status_code == 200:
+                        self.logger.info(f"Internet connectivity confirmed via {url}")
+                        return True
+                except requests.exceptions.RequestException as e:
+                    # Handle specific request exceptions more gracefully
+                    if "HeaderParsingError" in str(e):
+                        self.logger.warning(f"Captive portal detected (url={url}) - this is normal during authentication")
+                        continue
+                    elif "ConnectionError" in str(e) or "timeout" in str(e).lower():
+                        self.logger.debug(f"Network connectivity issue to {url}: {e}")
+                        continue
+                    else:
+                        self.logger.debug(f"Failed to connect to {url}: {e}")
+                        continue
+                except Exception as e:
+                    self.logger.debug(f"Unexpected error connecting to {url}: {e}")
+                    continue
                 
-        self.logger.info("No internet connectivity detected")
+        self.logger.info("No internet connectivity detected - may be behind captive portal")
         return False
         
     def _try_local_driver(self) -> Optional[Service]:
@@ -256,17 +275,128 @@ class WiFiHotspotAgent:
         except Exception as e:
             self.logger.warning(f"PATH search failed: {e}")
             return None
+    
+    def _force_cleanup_chrome_processes(self):
+        """Force cleanup of stuck Chrome processes."""
+        try:
+            self.logger.warning("Force cleaning up Chrome processes...")
+            
+            # First try the most graceful method (window close messages)
+            if not self._graceful_chrome_cleanup():
+                # If graceful cleanup failed, try taskkill without force
+                self.logger.info("Attempting taskkill graceful shutdown...")
+                graceful_result = subprocess.run(['taskkill', '/im', 'chrome.exe'], 
+                                               capture_output=True, text=True, check=False)
+                
+                # Wait for graceful shutdown
+                time.sleep(3)
+                
+                # Check if Chrome processes are still running
+                chrome_check = subprocess.run(['tasklist', '/fi', 'imagename eq chrome.exe'], 
+                                            capture_output=True, text=True, check=False)
+                
+                if 'chrome.exe' in chrome_check.stdout:
+                    self.logger.warning("Chrome processes still running, using force kill...")
+                    # Force kill only if graceful shutdown failed
+                    subprocess.run(['taskkill', '/f', '/im', 'chrome.exe'], 
+                                 capture_output=True, text=True, check=False)
+                else:
+                    self.logger.info("Chrome processes shut down gracefully")
+            
+            # Always force kill ChromeDriver processes (they should be headless)
+            subprocess.run(['taskkill', '/f', '/im', 'chromedriver.exe'], 
+                         capture_output=True, text=True, check=False)
+            
+            # Wait a moment for processes to terminate
+            time.sleep(2)
+            
+            self.logger.info("Chrome process cleanup completed")
+            
+        except Exception as e:
+            self.logger.error(f"Error during force cleanup: {e}")
+    
+    def cleanup_stuck_processes(self):
+        """Clean up any stuck Chrome/ChromeDriver processes."""
+        try:
+            self.logger.info("Checking for stuck Chrome processes...")
+            
+            # Check for Chrome processes
+            chrome_result = subprocess.run(['tasklist', '/fi', 'imagename eq chrome.exe'], 
+                                         capture_output=True, text=True, check=False)
+            
+            if 'chrome.exe' in chrome_result.stdout:
+                chrome_count = chrome_result.stdout.count('chrome.exe')
+                self.logger.warning(f"Found {chrome_count} Chrome processes running")
+                
+                # Clean up if there are too many Chrome processes
+                if chrome_count > 5:  # Threshold for too many processes
+                    self.logger.warning("Too many Chrome processes detected, cleaning up...")
+                    self._force_cleanup_chrome_processes()
+                else:
+                    self.logger.info("Chrome process count is normal")
+            else:
+                self.logger.info("No Chrome processes found")
+                
+        except Exception as e:
+            self.logger.error(f"Error checking Chrome processes: {e}")
+    
+    def _graceful_chrome_cleanup(self):
+        """Attempt graceful cleanup of Chrome processes using Chrome's own shutdown mechanism."""
+        try:
+            self.logger.info("Attempting graceful Chrome cleanup...")
+            
+            # Try to close Chrome gracefully by sending WM_CLOSE to Chrome windows
+            import ctypes
+            from ctypes import wintypes
+            
+            def enum_windows_callback(hwnd, lparam):
+                if ctypes.windll.user32.IsWindowVisible(hwnd):
+                    window_text = ctypes.create_unicode_buffer(1024)
+                    ctypes.windll.user32.GetWindowTextW(hwnd, window_text, 1024)
+                    if "chrome" in window_text.value.lower():
+                        windows.append(hwnd)
+                return True
+            
+            # Find Chrome windows
+            windows = []
+            EnumWindowsProc = ctypes.WINFUNCTYPE(ctypes.c_bool, wintypes.HWND, wintypes.LPARAM)
+            ctypes.windll.user32.EnumWindows(EnumWindowsProc(enum_windows_callback), 0)
+            
+            if windows:
+                self.logger.info(f"Found {len(windows)} Chrome windows, sending close messages...")
+                for hwnd in windows:
+                    ctypes.windll.user32.PostMessageW(hwnd, 0x0010, 0, 0)  # WM_CLOSE
+                
+                # Wait for graceful shutdown
+                time.sleep(5)
+                
+                # Check if Chrome processes are still running
+                chrome_check = subprocess.run(['tasklist', '/fi', 'imagename eq chrome.exe'], 
+                                            capture_output=True, text=True, check=False)
+                
+                if 'chrome.exe' not in chrome_check.stdout:
+                    self.logger.info("Chrome shut down gracefully")
+                    return True
+                else:
+                    self.logger.warning("Chrome did not shut down gracefully, will use force kill")
+                    return False
+            else:
+                self.logger.info("No Chrome windows found")
+                return True
+                
+        except Exception as e:
+            self.logger.warning(f"Graceful cleanup failed: {e}")
+            return False
         
     def handle_captive_portal(self, hotspot_config: Dict) -> bool:
         """Handle captive portal authentication."""
         self.logger.info(f"Handling captive portal for {hotspot_config['ssid']}")
         
+        service = None
+        driver = None
+        
         try:
             # Setup Chrome driver with multiple fallback options
-            service = None
-            driver = None
-            
-            # Try multiple approaches to get Chrome driver
             driver_attempts = [
                 self._try_local_driver,
                 self._try_webdriver_manager,
@@ -339,12 +469,29 @@ class WiFiHotspotAgent:
                 self.logger.error(f"Unknown login type: {hotspot_config['login_type']}")
                 success = False
                 
-            driver.quit()
             return success
             
         except Exception as e:
             self.logger.error(f"Error handling captive portal: {e}")
             return False
+        finally:
+            # Always clean up WebDriver resources
+            if driver:
+                try:
+                    self.logger.debug("Cleaning up WebDriver...")
+                    driver.quit()
+                    self.logger.debug("WebDriver cleanup completed")
+                except Exception as cleanup_error:
+                    self.logger.warning(f"Error during WebDriver cleanup: {cleanup_error}")
+                    # Force kill Chrome processes if normal cleanup fails
+                    self._force_cleanup_chrome_processes()
+            
+            # Clean up service if it exists
+            if service:
+                try:
+                    service.stop()
+                except Exception as service_error:
+                    self.logger.warning(f"Error stopping WebDriver service: {service_error}")
             
     def _handle_bt_business_login(self, driver, wait, config) -> bool:
         """Handle BT Business Broadband login flow."""
@@ -463,7 +610,8 @@ class WiFiHotspotAgent:
                         continue
                 
                 if not submit_clicked:
-                    self.logger.error("Could not find submit button with any selector")
+                    self.logger.error("Could not find submit button - captive portal page may have changed")
+                    self.logger.info("Consider checking captive_portal_debug.png for page layout")
                     return False
                     
             except Exception as e:
@@ -766,13 +914,14 @@ class WiFiHotspotAgent:
                     except:
                         continue
                 
-            # Final wait and verification
+            # Final wait and verification - give more time for connection to stabilize
             self.logger.info("Final verification...")
-            time.sleep(0.5)
+            time.sleep(3)  # Increased from 0.5 to 3 seconds
             
             # Browser will be closed by the main handle_captive_portal method
             self.logger.info("Login process completed, browser will be closed...")
             
+            # The improved check_internet_connectivity will handle retries and delays
             return self.check_internet_connectivity()
             
         except Exception as e:
@@ -813,12 +962,11 @@ class WiFiHotspotAgent:
         """Handle direct BT authentication URL (like OAuth2 authorization URLs)."""
         self.logger.info(f"Handling direct BT authentication URL: {auth_url}")
         
+        service = None
+        driver = None
+        
         try:
             # Setup Chrome driver with multiple fallback options
-            service = None
-            driver = None
-            
-            # Try multiple approaches to get Chrome driver
             driver_attempts = [
                 self._try_local_driver,
                 self._try_webdriver_manager,
@@ -885,12 +1033,29 @@ class WiFiHotspotAgent:
             # Handle the authentication flow
             success = self._handle_bt_oauth2_flow(driver, wait, config)
             
-            driver.quit()
             return success
             
         except Exception as e:
             self.logger.error(f"Error handling direct BT auth URL: {e}")
             return False
+        finally:
+            # Always clean up WebDriver resources
+            if driver:
+                try:
+                    self.logger.debug("Cleaning up WebDriver...")
+                    driver.quit()
+                    self.logger.debug("WebDriver cleanup completed")
+                except Exception as cleanup_error:
+                    self.logger.warning(f"Error during WebDriver cleanup: {cleanup_error}")
+                    # Force kill Chrome processes if normal cleanup fails
+                    self._force_cleanup_chrome_processes()
+            
+            # Clean up service if it exists
+            if service:
+                try:
+                    service.stop()
+                except Exception as service_error:
+                    self.logger.warning(f"Error stopping WebDriver service: {service_error}")
     
     def _handle_bt_oauth2_flow(self, driver, wait, config) -> bool:
         """Handle BT OAuth2 authentication flow."""
@@ -1092,14 +1257,17 @@ class WiFiHotspotAgent:
         """Main execution method."""
         self.logger.info("Starting WiFi Hotspot Agent")
         
+        # Clean up any stuck processes before starting
+        self.cleanup_stuck_processes()
+        
         # Check if already connected to internet
         if self.check_internet_connectivity():
-            self.logger.info("Internet is already available")
+            self.logger.info("[OK] Internet is already available - no action needed")
             return True
             
         # For Ethernet + AP setup, we don't need to connect to WiFi networks
         # The AP is already connected to EE WiFi, we just need to handle captive portal
-        self.logger.info("Ethernet mode: Handling captive portal for AP router re-authentication")
+        self.logger.info("[ACTIVE] Ethernet mode: Handling captive portal for AP router re-authentication")
         
         # Try to handle captive portal for configured hotspots
         for hotspot in self.config['hotspots']:
@@ -1113,12 +1281,18 @@ class WiFiHotspotAgent:
             
             # Handle captive portal directly (AP is already connected to EE WiFi)
             if self.handle_captive_portal(hotspot):
-                self.logger.info(f"Successfully logged into {ssid} via captive portal")
+                self.logger.info(f"[SUCCESS] Successfully logged into {ssid} via captive portal")
+                self.logger.info(f"[SUCCESS] Internet connectivity restored through {ssid}")
                 return True
             else:
-                self.logger.warning(f"Failed to login to {ssid} via captive portal")
+                self.logger.warning(f"Failed to login to {ssid} via captive portal - will try next network")
                 
         self.logger.error("No internet connection established via captive portal")
+        self.logger.info("This may be due to:")
+        self.logger.info("  - Network credentials incorrect")
+        self.logger.info("  - Captive portal page layout changed")
+        self.logger.info("  - Network connectivity issues")
+        self.logger.info("  - Check captive_portal_debug.png for troubleshooting")
         return False
 
 

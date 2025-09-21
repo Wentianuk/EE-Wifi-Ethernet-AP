@@ -1,0 +1,50 @@
+# Install OpenWrt Agent (Quick Reference)
+
+## Copy Files From Windows
+```powershell
+scp -r "C:\Users\Berries\Documents\EE WIFI\openwrt\package\ee-wifi-autologin\files\." root@<openwrt-ip>:/tmp/ee-wifi-autologin
+```
+Replace `<openwrt-ip>` with the router/VM address.
+
+## On The OpenWrt VM
+```sh
+ssh root@<openwrt-ip>
+opkg update
+opkg install python3 python3-requests python3-certifi
+
+mkdir -p /usr/share/ee-wifi-autologin
+cp /tmp/ee-wifi-autologin/usr/share/ee-wifi-autologin/ee_wifi_autologin.py /usr/share/ee-wifi-autologin/
+cp /tmp/ee-wifi-autologin/etc/ee-wifi-autologin.json.example /etc/
+cp /tmp/ee-wifi-autologin/etc/init.d/ee-wifi-autologin /etc/init.d/
+chmod 755 /etc/init.d/ee-wifi-autologin
+```
+
+## Credentials
+```sh
+cp /etc/ee-wifi-autologin.json.example /etc/ee-wifi-autologin.json
+cat <<'EOF' >/etc/ee-wifi-autologin.secrets.json
+{
+  "username": "YOUR_BT_EMAIL",
+  "password": "YOUR_BT_PASSWORD"
+}
+EOF
+chmod 600 /etc/ee-wifi-autologin.secrets.json
+```
+Edit `/etc/ee-wifi-autologin.json` hotspot entry to include:
+```json
+"secrets_file": "/etc/ee-wifi-autologin.secrets.json"
+```
+and remove inline `username`/`password`.
+
+## Manual Test
+```sh
+python3 /usr/share/ee-wifi-autologin/ee_wifi_autologin.py \
+  --config /etc/ee-wifi-autologin.json --once --verbose
+```
+
+## Enable Service
+```sh
+service ee-wifi-autologin enable
+service ee-wifi-autologin start
+logread -f | grep ee-wifi-autologin
+```

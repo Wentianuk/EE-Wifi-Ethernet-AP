@@ -1,0 +1,82 @@
+---
+description: Development workflow and best practices for EE WiFi project
+---
+
+# Development Workflow and Best Practices
+
+## Code Organization
+
+### File Naming Conventions
+- **Python Scripts**: Use descriptive names (e.g., `wifi_report.py`, `internet_monitor.py`)
+- **Batch Files**: Use action-oriented names (e.g., `start_monitor.bat`, `fix_firewall.bat`)
+- **PowerShell Scripts**: Use descriptive names with `.ps1` extension
+- **Configuration Files**: Use clear, descriptive names (e.g., `wifi_config.json`)
+
+### Directory Structure
+- **Root Directory**: Contains all main scripts and configuration files
+- **Log Files**: Generated in root directory with descriptive names
+- **Documentation**: Markdown files with clear naming conventions
+- **Scripts**: Organized by function (monitoring, web server, reporting)
+
+## Development Process
+
+### Testing Procedures
+1. **Local Testing**: Always test scripts locally before deployment
+2. **Error Handling**: Test error conditions and edge cases
+3. **Logging**: Verify log output and format consistency
+4. **Integration**: Test component interactions and data flow
+
+### Code Quality
+- **Documentation**: Include comprehensive docstrings and comments
+- **Error Handling**: Implement robust error handling and recovery
+- **Logging**: Use consistent logging formats and levels
+- **Validation**: Validate inputs and handle edge cases
+
+## Monitoring and Maintenance
+
+### Log Management
+- **Rotation**: Implement log rotation for large files
+- **Cleanup**: Regular cleanup of old log files
+- **Analysis**: Use reporting tools for log analysis
+- **Backup**: Backup critical configuration and log files
+
+### Performance Monitoring
+- **Resource Usage**: Monitor CPU and memory usage
+- **Network Performance**: Track connectivity and response times
+- **Service Health**: Regular health checks for all services
+- **Error Rates**: Monitor and analyze error patterns
+
+## Deployment Best Practices
+
+### Version Control
+- **Git Integration**: Use Git for version control
+- **Branching**: Use feature branches for development
+- **Commits**: Make atomic commits with descriptive messages
+- **Tags**: Tag releases and important milestones
+
+### Configuration Management
+- **Templates**: Use configuration templates for easy setup
+- **Validation**: Validate configuration files before deployment
+- **Backup**: Backup configuration files before changes
+- **Documentation**: Document all configuration options
+
+## Troubleshooting Workflow
+
+### Issue Identification
+1. **Check Logs**: Review relevant log files
+2. **Service Status**: Verify service status and health
+3. **Network Connectivity**: Test network connections
+4. **Configuration**: Validate configuration files
+
+### Resolution Process
+1. **Isolate Issue**: Identify the root cause
+2. **Test Fix**: Test the fix in a safe environment
+3. **Deploy**: Deploy the fix with proper testing
+4. **Monitor**: Monitor the system after deployment
+5. **Document**: Document the issue and resolution
+
+## Security Considerations
+- **Permissions**: Use appropriate file and service permissions
+- **Firewall**: Configure firewall rules properly
+- **Credentials**: Secure storage of API keys and tokens
+- **Updates**: Keep dependencies and services updated

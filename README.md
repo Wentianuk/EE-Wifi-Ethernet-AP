@@ -1,6 +1,6 @@
 # EE WiFi Auto-Login System
 
-A production-ready Windows system that automatically handles EE WiFi captive portal authentication with BT Business Broadband accounts. Features continuous internet monitoring, automatic re-authentication, and comprehensive logging.
+A production-ready Windows system that automatically handles EE WiFi captive portal authentication with BT Business Broadband accounts. Features continuous internet monitoring, automatic re-authentication, graceful Chrome cleanup, and comprehensive logging.
 
 ## 🚀 Overview
 
@@ -8,10 +8,12 @@ This system provides **fully automated EE WiFi management** for users with BT Bu
 
 - **🔄 Automatic Re-authentication**: Handles EE WiFi captive portal when AP router logs out
 - **⏱️ Continuous Monitoring**: 24/7 internet connectivity monitoring every 30 seconds
-- **⚡ Fast Recovery**: 13.48-second optimized login process
+- **⚡ Fast Recovery**: Optimized login process with graceful Chrome cleanup
 - **🔍 Production Ready**: Invisible browser mode for seamless operation
 - **📊 Comprehensive Logging**: SQLite database + text file logging
 - **🚀 Auto-Start**: Runs automatically on Windows startup
+- **🛡️ Process Management**: Automatic cleanup of stuck Chrome processes
+- **🔧 Multiple Interfaces**: Python, PowerShell, and Batch scripts
 
 ## ⚠️ Security First
 
@@ -28,18 +30,26 @@ This system provides **fully automated EE WiFi management** for users with BT Bu
 - **BT Business Users**: Automatic EE WiFi authentication with BT Business Broadband accounts
 - **24/7 Operation**: Continuous monitoring with automatic recovery
 - **Production Use**: Optimized timing and invisible browser operation
+- **Chrome Process Issues**: Automatic cleanup prevents stuck processes
 
 ## 📁 Project Structure
 
 ### Core System Files
 | File | Purpose |
 |------|---------|
-| `wifi_hotspot_agent.py` | **Main Agent** - Handles BT Business login automation |
+| `wifi_hotspot_agent.py` | **Main Agent** - Handles BT Business login automation with graceful cleanup |
 | `internet_monitor.py` | **Monitor** - Continuous connectivity monitoring every 30s |
 | `internet_logbook.py` | **Logging** - SQLite database + text file logging |
-| `start_continuous_monitor.py` | **Launcher** - Start continuous monitoring |
 | `check_monitor_status.py` | **Status** - Check system status and health |
 | `toggle_browser_mode.py` | **Utility** - Switch between debug/production modes |
+
+### Process Management & Cleanup
+| File | Purpose |
+|------|---------|
+| `cleanup_chrome_processes.py` | **Cleanup Utility** - Advanced Chrome process management |
+| `cleanup_chrome.bat` | **Quick Cleanup** - Simple Windows batch cleanup |
+| `cleanup_chrome.ps1` | **PowerShell Cleanup** - Advanced PowerShell cleanup with monitoring |
+| `CHROME_CLEANUP_GUIDE.md` | **Cleanup Guide** - Comprehensive process management guide |
 
 ### Configuration & Setup
 | File | Purpose |
@@ -56,6 +66,24 @@ This system provides **fully automated EE WiFi management** for users with BT Bu
 | `start_monitor.bat` | **Batch Launcher** - Alternative startup method |
 | `setup_autostart.ps1` | **Auto-Start Setup** - Configure Windows startup |
 | `setup_autostart.bat` | **Auto-Start Batch** - Alternative auto-start setup |
+| `setup_monitor_autostart.ps1` | **Monitor Auto-Start** - Advanced auto-start configuration |
+
+### Web Server & Cloudflare
+| File | Purpose |
+|------|---------|
+| `web_server.py` | **Web Server** - Python HTTP server for port 80 |
+| `start_port80_server.py` | **Port 80 Server** - Simplified port 80 server |
+| `kill_port80_and_start_server.py` | **Port Management** - Port management script |
+| `cloudflared.exe` | **Cloudflare Tunnel** - Cloudflare tunnel client |
+| `reinstall_cloudflared.ps1` | **Cloudflare Setup** - Service reinstallation script |
+
+### WiFi Reporting System
+| File | Purpose |
+|------|---------|
+| `wifi_report.py` | **Report Generator** - Main WiFi report generator |
+| `wifi_report.cmd` | **Command Interface** - Command-line interface |
+| `wifi_report_function.ps1` | **PowerShell Function** - PowerShell function |
+| `wifi_report.bat` | **Batch Report** - Batch script for reports |
 
 ### Documentation
 | File | Purpose |
@@ -65,6 +93,7 @@ This system provides **fully automated EE WiFi management** for users with BT Bu
 | `DEBUG_MODE_GUIDE.md` | **Debug Guide** - Troubleshooting with visible browser |
 | `ETHERNET_SETUP_GUIDE.md` | **Ethernet Guide** - Ethernet + AP setup instructions |
 | `AUTO_START_SETUP.md` | **Auto-Start Guide** - Windows startup configuration |
+| `CHROME_CLEANUP_GUIDE.md` | **Cleanup Guide** - Chrome process management guide |
 
 ## ⚙️ Quick Setup
 
@@ -116,16 +145,22 @@ Edit `wifi_config.json` with your BT Business credentials:
 ### 4. Start Monitoring
 ```bash
 # Start continuous monitoring (recommended)
-python start_continuous_monitor.py
+python internet_monitor.py
 
 # Or use PowerShell launcher
 .\start_monitor.ps1
+
+# Or use batch launcher
+.\start_monitor.bat
 ```
 
 ### 5. Auto-Start Setup (Optional)
 ```bash
-# Set up automatic startup
-.\setup_autostart.ps1
+# Set up automatic startup (PowerShell - Recommended)
+.\setup_monitor_autostart.ps1
+
+# Or use batch setup
+.\setup_autostart.bat
 ```
 
 ## 🔄 How It Works
@@ -133,9 +168,10 @@ python start_continuous_monitor.py
 ### System Flow
 1. **Continuous Monitoring**: Checks internet connectivity every 30 seconds
 2. **Disconnection Detection**: Detects when AP router loses EE WiFi connection
-3. **Automatic Recovery**: Triggers BT Business login process
-4. **Fast Authentication**: Completes login in 13.48 seconds
-5. **Connection Restored**: Internet access automatically restored
+3. **Process Cleanup**: Automatically cleans up stuck Chrome processes
+4. **Automatic Recovery**: Triggers BT Business login process
+5. **Fast Authentication**: Completes login with graceful Chrome shutdown
+6. **Connection Restored**: Internet access automatically restored
 
 ### BT Business Login Process
 1. **Navigate to EE WiFi Portal**: `https://ee-wifi.ee.co.uk/home`
@@ -146,20 +182,49 @@ python start_continuous_monitor.py
 6. **Click "Next"**: Proceeds to password step
 7. **Enter Password**: Inputs your BT Business password
 8. **Complete Login**: Final authentication and verification
-9. **Verify Internet**: Confirms successful connection
+9. **Graceful Shutdown**: Chrome closes properly without recovery dialogs
+10. **Verify Internet**: Confirms successful connection
+
+### Chrome Process Management
+1. **Process Monitoring**: Checks for stuck Chrome processes before starting
+2. **Graceful Cleanup**: Attempts graceful shutdown using Windows messages
+3. **Fallback Cleanup**: Uses taskkill without force flag if needed
+4. **Force Cleanup**: Only uses force kill as last resort
+5. **Prevention**: Prevents "Chrome didn't shut down correctly" dialogs
 
 ## 🚀 Usage
 
 ### Start Continuous Monitoring
 ```bash
 # Production mode (invisible browser)
-python start_continuous_monitor.py
+python internet_monitor.py
 
 # PowerShell launcher with options
 .\start_monitor.ps1                    # Default 30-second interval
 .\start_monitor.ps1 -Interval 15       # Custom interval
 .\start_monitor.ps1 -Once              # Single check
 .\start_monitor.ps1 -Background        # Background mode
+
+# Batch launcher
+.\start_monitor.bat
+```
+
+### Process Management
+```bash
+# Check and clean up Chrome processes
+python cleanup_chrome_processes.py --check
+
+# Force cleanup
+python cleanup_chrome_processes.py --check --force
+
+# Start continuous monitoring
+python cleanup_chrome_processes.py --monitor --interval 300
+
+# Quick cleanup (Windows)
+.\cleanup_chrome.bat
+
+# Advanced cleanup (PowerShell)
+.\cleanup_chrome.ps1 -Force -Monitor
 ```
 
 ### Check System Status
@@ -169,6 +234,8 @@ python check_monitor_status.py
 
 # View recent logs
 Get-Content internet_monitor.log -Tail 20
+Get-Content wifi_agent.log -Tail 20
+Get-Content chrome_cleanup.log -Tail 20
 ```
 
 ### Toggle Browser Mode
@@ -188,6 +255,11 @@ python toggle_browser_mode.py show
 .\view_logbook.ps1 -Today     # Today's summary
 .\view_logbook.ps1 -Export    # Export all data
 
+# WiFi reports
+.\wifi_report.bat
+.\wifi_report.cmd
+python wifi_report.py
+
 # Direct Python access
 python internet_logbook.py --events 20
 python internet_logbook.py --report --days 7
@@ -197,16 +269,18 @@ python internet_logbook.py --export
 ## 📊 Performance
 
 ### Optimized Timing
-- **Total Login Time**: 13.48 seconds (33% faster than original)
-- **Check Interval**: 30 seconds
+- **Total Login Time**: Optimized with graceful Chrome cleanup
+- **Check Interval**: 30 seconds (configurable)
 - **Recovery Time**: < 30 seconds from disconnection
 - **Browser Mode**: Invisible (headless) for production
+- **Chrome Cleanup**: Graceful shutdown prevents recovery dialogs
 
 ### Resource Usage
 - **Memory**: Minimal footprint with headless browser
 - **CPU**: Low usage during monitoring
 - **Network**: Only connectivity checks and login attempts
 - **Storage**: Efficient SQLite database logging
+- **Chrome Processes**: Automatic cleanup prevents accumulation
 
 ## 🔧 Configuration Options
 
@@ -227,29 +301,45 @@ python internet_logbook.py --export
 - **`timeout`**: Connection timeout in seconds (default: 15)
 - **`max_retries`**: Login attempt retries (default: 1)
 
+### Process Management
+- **Chrome Process Threshold**: 5 processes (configurable)
+- **Graceful Shutdown**: 5 seconds for window close messages
+- **Taskkill Graceful**: 3 seconds for taskkill without force
+- **Force Cleanup**: Only when graceful methods fail
+
 ## 🛠️ Troubleshooting
 
 ### Common Issues
 
-1. **"Invalid credentials" error**
+1. **"Chrome didn't shut down correctly" dialog**
+   - **Fixed**: New graceful cleanup system prevents this
+   - **Solution**: Use updated cleanup scripts
+   - **Prevention**: Automatic process monitoring
+
+2. **"Invalid credentials" error**
    - Verify BT Business Broadband account is active
    - Check email and password are correct
    - Ensure using BT Business (not BT Consumer) credentials
 
-2. **"Network not found" error**
+3. **"Network not found" error**
    - Check you're in an area with EE WiFi coverage
    - Verify SSID matches exactly: "EE WiFi"
    - Try connecting manually first
 
-3. **"Chrome driver issues"**
+4. **"Chrome driver issues"**
    - System includes local `chromedriver.exe`
    - Ensure Chrome browser is installed
    - Check `wifi_agent.log` for detailed errors
 
-4. **Monitor not starting**
+5. **Monitor not starting**
    - Run PowerShell as Administrator
    - Check `internet_monitor.log` for errors
    - Verify configuration file exists and is valid
+
+6. **Too many Chrome processes**
+   - **Solution**: Run `python cleanup_chrome_processes.py --check`
+   - **Prevention**: Automatic cleanup is now built-in
+   - **Monitoring**: Use `.\cleanup_chrome.ps1 -Monitor`
 
 ### Debug Mode
 Enable visible browser for troubleshooting:
@@ -259,7 +349,7 @@ Enable visible browser for troubleshooting:
 python toggle_browser_mode.py
 
 # Start monitoring with visible browser
-python start_continuous_monitor.py
+python internet_monitor.py
 ```
 
 ### Manual Testing
@@ -268,10 +358,13 @@ python start_continuous_monitor.py
 python internet_monitor.py --once
 
 # Test WiFi agent manually
-python wifi_hotspot_agent.py
+python wifi_hotspot_agent.py --debug
 
 # Check system status
 python check_monitor_status.py
+
+# Test cleanup
+python cleanup_chrome_processes.py --check
 ```
 
 ## 📈 Logging & Monitoring
@@ -281,6 +374,7 @@ python check_monitor_status.py
 - **`internet_monitor.log`**: Monitor activity and status
 - **`wifi_agent.log`**: Login attempts and results
 - **`internet_logbook.log`**: System logging
+- **`chrome_cleanup.log`**: Process cleanup activity
 
 ### Event Types
 - **CONNECTED**: Internet connection established
@@ -289,6 +383,8 @@ python check_monitor_status.py
 - **LOGIN_ATTEMPT**: BT Business login initiated
 - **LOGIN_SUCCESS**: Login completed successfully
 - **LOGIN_FAILED**: Login attempt failed
+- **CLEANUP_STARTED**: Chrome process cleanup initiated
+- **CLEANUP_COMPLETED**: Chrome process cleanup finished
 
 ### Statistics Tracked
 - **Daily Success Rates**: Percentage of successful connections
@@ -296,6 +392,7 @@ python check_monitor_status.py
 - **Total Downtime**: Cumulative time without internet
 - **Average Recovery Time**: Time to restore connection
 - **Login Success Rate**: Percentage of successful logins
+- **Chrome Process Counts**: Process cleanup statistics
 
 ## 🔒 Security
 
@@ -304,6 +401,7 @@ python check_monitor_status.py
 - **Minimal Permissions**: Runs with required permissions only
 - **Log Monitoring**: Track all authentication attempts
 - **Version Control**: `wifi_config.json` excluded from git
+- **Process Isolation**: Chrome processes run in isolated environment
 
 ## 📋 Requirements
 
@@ -329,11 +427,13 @@ Required packages:
 - **Ethernet + AP Setup**: Monitor Ethernet connection to AP router
 - **Automatic Re-authentication**: Handle EE WiFi captive portal when AP logs out
 - **24/7 Operation**: Continuous monitoring with automatic recovery
+- **Chrome Process Management**: Prevent stuck processes and recovery dialogs
 
 ### Additional Use Cases
 - **Direct EE WiFi**: Connect directly to EE WiFi networks
 - **Multiple Networks**: Support for various BT WiFi networks
 - **Business Environments**: Reliable connectivity for business users
+- **Process Monitoring**: Monitor and clean up Chrome processes
 
 ## 📚 Documentation
 
@@ -341,6 +441,26 @@ Required packages:
 - **[DEBUG_MODE_GUIDE.md](DEBUG_MODE_GUIDE.md)** - Troubleshooting guide
 - **[ETHERNET_SETUP_GUIDE.md](ETHERNET_SETUP_GUIDE.md)** - Ethernet + AP setup
 - **[AUTO_START_SETUP.md](AUTO_START_SETUP.md)** - Windows startup configuration
+- **[CHROME_CLEANUP_GUIDE.md](CHROME_CLEANUP_GUIDE.md)** - Chrome process management guide
+
+## 🆕 Recent Updates
+
+### Chrome Process Management
+- **Graceful Cleanup**: Prevents "Chrome didn't shut down correctly" dialogs
+- **Process Monitoring**: Automatic detection and cleanup of stuck processes
+- **Multiple Cleanup Methods**: Window messages, taskkill, and force kill
+- **Prevention System**: Built-in process monitoring before starting
+
+### Enhanced Monitoring
+- **Continuous Process Monitoring**: Automatic cleanup during operation
+- **Improved Error Handling**: Better recovery from Chrome process issues
+- **Multiple Cleanup Scripts**: Python, PowerShell, and Batch options
+- **Comprehensive Logging**: Track all cleanup activities
+
+### Auto-Start Improvements
+- **Advanced Auto-Start**: PowerShell script with better error handling
+- **Multiple Setup Options**: Choose the best method for your environment
+- **Process Integration**: Auto-start includes process cleanup
 
 ## 🤝 Contributing
 
@@ -350,6 +470,8 @@ This project is based on the [EE-Wifi repository](https://github.com/Wentianuk/E
 - Comprehensive logging
 - Production-ready reliability
 - Ethernet + AP support
+- Chrome process management
+- Graceful cleanup system
 
 ## 📄 License
 
@@ -357,4 +479,4 @@ This project maintains the same license as the original [EE-Wifi repository](htt
 
 ---
 
-**🚀 Production Ready**: This system is optimized for reliable, continuous operation with automatic EE WiFi re-authentication for BT Business Broadband users.
+**🚀 Production Ready**: This system is optimized for reliable, continuous operation with automatic EE WiFi re-authentication for BT Business Broadband users, including advanced Chrome process management to prevent common issues.

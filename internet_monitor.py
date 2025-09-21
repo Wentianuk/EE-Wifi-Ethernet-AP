@@ -145,6 +145,10 @@ class InternetMonitor:
             
             # Let the agent read debug settings from config file
             agent = WiFiHotspotAgent(self.config_file)
+            
+            # Clean up any stuck processes before running
+            agent.cleanup_stuck_processes()
+            
             success = agent.run()
             
             if success:

@@ -1,0 +1,44 @@
+---
+alwaysApply: true
+description: EE WiFi Project Structure and Core Components
+---
+
+# EE WiFi Project Structure Guide
+
+This is a comprehensive WiFi monitoring and management system with multiple components:
+
+## Core Monitoring Scripts
+- [internet_monitor.py](mdc:internet_monitor.py) - Main internet connectivity monitor
+- [internet_logbook.py](mdc:internet_logbook.py) - Logbook management system
+- [wifi_hotspot_agent.py](mdc:wifi_hotspot_agent.py) - WiFi hotspot management agent
+- [check_monitor_status.py](mdc:check_monitor_status.py) - Monitor status checker
+
+## Web Server Components
+- [web_server.py](mdc:web_server.py) - Python HTTP server for port 80
+- [start_port80_server.py](mdc:start_port80_server.py) - Simplified port 80 server
+- [kill_port80_and_start_server.py](mdc:kill_port80_and_start_server.py) - Port management script
+
+## Cloudflare Tunnel Integration
+- [cloudflared.exe](mdc:cloudflared.exe) - Cloudflare tunnel client
+- [reinstall_cloudflared.ps1](mdc:reinstall_cloudflared.ps1) - Service reinstallation script
+- [reinstall_cloudflared.bat](mdc:reinstall_cloudflared.bat) - Batch reinstallation script
+
+## WiFi Reporting System
+- [wifi_report.py](mdc:wifi_report.py) - Main WiFi report generator
+- [wifi_report.cmd](mdc:wifi_report.cmd) - Command-line interface
+- [wifi_report_function.ps1](mdc:wifi_report_function.ps1) - PowerShell function
+
+## Configuration Files
+- [wifi_config.json](mdc:wifi_config.json) - Main WiFi configuration
+- [wifi_config_template.json](mdc:wifi_config_template.json) - Configuration template
+- [requirements.txt](mdc:requirements.txt) - Python dependencies
+
+## Log Files
+- [internet_connectivity_records.txt](mdc:internet_connectivity_records.txt) - Connectivity event log
+- [internet_monitor.log](mdc:internet_monitor.log) - Monitor activity log
+- [wifi_agent.log](mdc:wifi_agent.log) - WiFi agent log
+
+## Startup Scripts
+- [start_monitor.bat](mdc:start_monitor.bat) - Windows batch startup
+- [start_monitor.ps1](mdc:start_monitor.ps1) - PowerShell startup
+- [setup_autostart.bat](mdc:setup_autostart.bat) - Auto-start configuration

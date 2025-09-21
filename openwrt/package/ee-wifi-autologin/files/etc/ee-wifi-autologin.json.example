@@ -1,0 +1,37 @@
+{
+    "check_interval": 60,
+    "connectivity_urls": [
+        "https://connectivitycheck.gstatic.com/generate_204",
+        "https://www.google.com/generate_204"
+    ],
+    "timeouts": {
+        "http": 8,
+        "login": 30
+    },
+    "hotspots": [
+        {
+            "ssid": "EE WiFi",
+            "interface": "wwan",
+            "login_type": "http_post",
+            "portal_url": "https://ee-wifi.ee.co.uk/home",
+            "post_url": "https://ee-wifi.ee.co.uk/authenticate",
+            "form_data": {
+                "username": "{username}",
+                "password": "{password}",
+                "remember_me": "true"
+            },
+            "username": "your_email@example.com",
+            "password": "your_password"
+        },
+        {
+            "ssid": "EE WiFi (BT Business)",
+            "interface": "wwan",
+            "login_type": "bt_b2c",
+            "portal_url": "https://ee-wifi.ee.co.uk/home",
+            "init_url": "https://ee-wifi.ee.co.uk/safLogon?safTenantKey=BTB",
+            "username": "your_email@example.com",
+            "password": "your_password",
+            "success_status": [200, 302]
+        }
+    ]
+}
