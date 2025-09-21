@@ -286,49 +286,123 @@ class WiFiHotspotAgent:
             self.logger.warning(f"PATH search failed: {e}")
             return None
     
-    def _force_cleanup_chrome_processes(self):
-        """Force cleanup of stuck Chrome processes."""
+    def _selective_cleanup_chrome_processes(self):
+        """Selective cleanup that only targets WiFi agent Chrome processes, preserving user browsers."""
         try:
-            self.logger.warning("Force cleaning up Chrome processes...")
+            self.logger.warning("Cleaning up WiFi agent Chrome processes only...")
             
-            # First try the most graceful method (window close messages)
-            if not self._graceful_chrome_cleanup():
-                # If graceful cleanup failed, try taskkill without force
-                self.logger.info("Attempting taskkill graceful shutdown...")
-                graceful_result = subprocess.run(['taskkill', '/im', 'chrome.exe'], 
-                                               capture_output=True, text=True, check=False)
+            # Always force kill ChromeDriver processes (they should be headless and WiFi agent related)
+            chromedriver_result = subprocess.run(['taskkill', '/f', '/im', 'chromedriver.exe'], 
+                         capture_output=True, text=True, check=False)
+            if chromedriver_result.returncode == 0:
+                self.logger.info("Cleaned up ChromeDriver processes")
+            
+            # Try to identify and close only WiFi agent-related Chrome processes
+            # We'll be more selective and only close Chrome processes if they appear to be from captive portal automation
+            if hasattr(self, 'driver') and self.driver:
+                try:
+                    self.logger.info("Closing WiFi agent Chrome browser session...")
+                    self.driver.quit()
+                    self.driver = None
+                    self.logger.info("WiFi agent Chrome session closed successfully")
+                except Exception as e:
+                    self.logger.warning(f"Error closing WiFi agent Chrome session: {e}")
+            
+            # Use a more targeted approach - only clean up headless Chrome processes
+            self.logger.info("Looking for headless Chrome processes (WiFi agent related)...")
+            
+            # Get all Chrome processes with command line arguments
+            try:
+                wmic_result = subprocess.run([
+                    'wmic', 'process', 'where', 'name="chrome.exe"', 
+                    'get', 'ProcessId,CommandLine', '/format:csv'
+                ], capture_output=True, text=True, check=False)
                 
-                # Wait for graceful shutdown
-                time.sleep(3)
+                headless_pids = []
+                if wmic_result.returncode == 0:
+                    lines = wmic_result.stdout.strip().split('\n')
+                    for line in lines[1:]:  # Skip header
+                        if line.strip() and '--headless' in line:
+                            parts = line.split(',')
+                            if len(parts) >= 3:
+                                try:
+                                    pid = parts[-1].strip()  # PID is usually the last column
+                                    if pid.isdigit():
+                                        headless_pids.append(pid)
+                                        self.logger.info(f"Found headless Chrome process PID: {pid}")
+                                except:
+                                    continue
                 
-                # Check if Chrome processes are still running
-                chrome_check = subprocess.run(['tasklist', '/fi', 'imagename eq chrome.exe'], 
-                                            capture_output=True, text=True, check=False)
-                
-                if 'chrome.exe' in chrome_check.stdout:
-                    self.logger.warning("Chrome processes still running, using force kill...")
-                    # Force kill only if graceful shutdown failed
+                # Kill only headless Chrome processes (these are likely from WiFi agent)
+                for pid in headless_pids:
+                    try:
+                        subprocess.run(['taskkill', '/f', '/pid', pid], 
+                                     capture_output=True, text=True, check=False)
+                        self.logger.info(f"Terminated headless Chrome process PID: {pid}")
+                    except Exception as e:
+                        self.logger.warning(f"Failed to terminate PID {pid}: {e}")
+                        
+                if headless_pids:
+                    self.logger.info(f"Cleaned up {len(headless_pids)} WiFi agent Chrome processes")
+                else:
+                    self.logger.info("No headless Chrome processes found to clean up")
+                    
+            except Exception as e:
+                self.logger.warning(f"Could not perform selective cleanup: {e}")
+                # Fallback: only clean up if there are truly excessive processes (30+)
+                chrome_result = subprocess.run(['tasklist', '/fi', 'imagename eq chrome.exe'], 
+                                             capture_output=True, text=True, check=False)
+                if 'chrome.exe' in chrome_result.stdout:
+                    chrome_count = chrome_result.stdout.count('chrome.exe')
+                    if chrome_count > 30:  # Very high threshold
+                        self.logger.warning(f"Excessive Chrome processes ({chrome_count}) detected, performing emergency cleanup...")
+                        self._emergency_cleanup_chrome_processes()
+            
+            # Wait a moment for processes to terminate
+            time.sleep(1)
+            
+            self.logger.info("Selective Chrome cleanup completed")
+            
+        except Exception as e:
+            self.logger.error(f"Error during selective cleanup: {e}")
+    
+    def _emergency_cleanup_chrome_processes(self):
+        """Emergency cleanup - only used when there are truly excessive Chrome processes."""
+        try:
+            self.logger.warning("Performing emergency Chrome cleanup...")
+            
+            # First try graceful shutdown
+            subprocess.run(['taskkill', '/im', 'chrome.exe'], 
+                         capture_output=True, text=True, check=False)
+            
+            # Wait for graceful shutdown
+            time.sleep(3)
+            
+            # Check if Chrome processes are still running
+            chrome_check = subprocess.run(['tasklist', '/fi', 'imagename eq chrome.exe'], 
+                                        capture_output=True, text=True, check=False)
+            
+            if 'chrome.exe' in chrome_check.stdout:
+                chrome_count = chrome_check.stdout.count('chrome.exe')
+                if chrome_count > 20:  # Still too many
+                    self.logger.warning("Chrome processes still excessive, using force kill...")
                     subprocess.run(['taskkill', '/f', '/im', 'chrome.exe'], 
                                  capture_output=True, text=True, check=False)
                 else:
-                    self.logger.info("Chrome processes shut down gracefully")
-            
-            # Always force kill ChromeDriver processes (they should be headless)
-            subprocess.run(['taskkill', '/f', '/im', 'chromedriver.exe'], 
-                         capture_output=True, text=True, check=False)
-            
-            # Wait a moment for processes to terminate
-            time.sleep(2)
-            
-            self.logger.info("Chrome process cleanup completed")
+                    self.logger.info("Chrome process count reduced to acceptable level")
             
         except Exception as e:
-            self.logger.error(f"Error during force cleanup: {e}")
+            self.logger.error(f"Error during emergency cleanup: {e}")
+    
+    def _force_cleanup_chrome_processes(self):
+        """Legacy method - now redirects to selective cleanup."""
+        self.logger.info("Using selective cleanup instead of force cleanup to preserve user browsers...")
+        self._selective_cleanup_chrome_processes()
     
     def cleanup_stuck_processes(self):
-        """Clean up any stuck Chrome/ChromeDriver processes."""
+        """Clean up only WiFi agent-related Chrome processes, preserving user browsing."""
         try:
-            self.logger.info("Checking for stuck Chrome processes...")
+            self.logger.info("Checking for WiFi agent Chrome processes...")
             
             # Check for Chrome processes
             chrome_result = subprocess.run(['tasklist', '/fi', 'imagename eq chrome.exe'], 
@@ -336,14 +410,14 @@ class WiFiHotspotAgent:
             
             if 'chrome.exe' in chrome_result.stdout:
                 chrome_count = chrome_result.stdout.count('chrome.exe')
-                self.logger.warning(f"Found {chrome_count} Chrome processes running")
+                self.logger.info(f"Found {chrome_count} Chrome processes running")
                 
-                # Clean up if there are too many Chrome processes
-                if chrome_count > 5:  # Threshold for too many processes
-                    self.logger.warning("Too many Chrome processes detected, cleaning up...")
-                    self._force_cleanup_chrome_processes()
+                # Only clean up if there are excessive Chrome processes (likely from previous WiFi agent runs)
+                if chrome_count > 15:  # Increased threshold to avoid killing user browsers
+                    self.logger.warning("Too many Chrome processes detected, cleaning up WiFi agent processes only...")
+                    self._selective_cleanup_chrome_processes()
                 else:
-                    self.logger.info("Chrome process count is normal")
+                    self.logger.info("Chrome process count is normal - preserving user browser sessions")
             else:
                 self.logger.info("No Chrome processes found")
                 
