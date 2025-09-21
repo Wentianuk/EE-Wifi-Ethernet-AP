@@ -151,17 +151,27 @@ class WiFiHotspotAgent:
             'http://www.google.com'   # HTTP fallback for captive portal detection
         ]
         
-        # Try multiple times with increasing delays to handle post-login delays
-        for attempt in range(3):
+        # Fast-path: try immediate connection first for sub-60s recovery
+        for url in test_urls[:2]:  # Try fastest URLs first (DNS servers)
+            try:
+                response = requests.get(url, timeout=2, allow_redirects=False)
+                if response.status_code == 200:
+                    self.logger.info(f"[FAST-PATH] Internet connectivity confirmed via {url}")
+                    return True
+            except:
+                continue
+        
+        # Full retry sequence with optimized delays for sub-60s reconnection
+        for attempt in range(2):  # Reduced from 3 to 2 attempts for speed
             if attempt > 0:
-                wait_time = attempt * 2  # 2, 4 seconds
+                wait_time = attempt * 1.5  # 1.5 seconds
                 self.logger.debug(f"Waiting {wait_time} seconds before retry {attempt + 1}")
                 time.sleep(wait_time)
             
             for url in test_urls:
                 try:
                     self.logger.debug(f"Testing connectivity to {url} (attempt {attempt + 1})")
-                    response = requests.get(url, timeout=5, allow_redirects=False)
+                    response = requests.get(url, timeout=4, allow_redirects=False)
                     self.logger.debug(f"Response status: {response.status_code}")
                     if response.status_code == 200:
                         self.logger.info(f"Internet connectivity confirmed via {url}")
@@ -914,9 +924,9 @@ class WiFiHotspotAgent:
                     except:
                         continue
                 
-            # Final wait and verification - give more time for connection to stabilize
+            # Final wait and verification - optimized for speed
             self.logger.info("Final verification...")
-            time.sleep(3)  # Increased from 0.5 to 3 seconds
+            time.sleep(1.5)  # Further reduced for sub-60s target
             
             # Browser will be closed by the main handle_captive_portal method
             self.logger.info("Login process completed, browser will be closed...")
@@ -1118,7 +1128,7 @@ class WiFiHotspotAgent:
                         next_button.click()
                         self.logger.info(f"Clicked Next button: {selector}")
                         next_clicked = True
-                        time.sleep(3)
+                        time.sleep(1.5)  # Optimized for sub-60s recovery
                         break
                 except:
                     continue
@@ -1128,7 +1138,7 @@ class WiFiHotspotAgent:
                 try:
                     email_field.send_keys("\n")
                     self.logger.info("Pressed Enter on email field")
-                    time.sleep(3)
+                    time.sleep(1.5)  # Optimized for sub-60s recovery
                 except:
                     pass
             
@@ -1186,7 +1196,7 @@ class WiFiHotspotAgent:
                         submit_button.click()
                         self.logger.info(f"Clicked submit button: {selector}")
                         submit_clicked = True
-                        time.sleep(3)
+                        time.sleep(1.5)  # Optimized for sub-60s recovery
                         break
                 except:
                     continue
@@ -1196,7 +1206,7 @@ class WiFiHotspotAgent:
                 try:
                     password_field.send_keys("\n")
                     self.logger.info("Pressed Enter on password field")
-                    time.sleep(3)
+                    time.sleep(1.5)  # Optimized for sub-60s recovery
                 except:
                     pass
             
@@ -1241,7 +1251,7 @@ class WiFiHotspotAgent:
                         EC.element_to_be_clickable((By.XPATH, f"//button[contains(text(), '{text}')] | //a[contains(text(), '{text}')]"))
                     )
                     button.click()
-                    time.sleep(3)
+                    time.sleep(1.5)  # Optimized for sub-60s recovery
                     break
                 except:
                     continue

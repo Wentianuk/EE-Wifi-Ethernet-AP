@@ -90,7 +90,7 @@ class InternetMonitor:
         
         for url in test_urls:
             try:
-                response = requests.get(url, timeout=5)
+                response = requests.get(url, timeout=4)
                 if response.status_code == 200:
                     successful_connections += 1
                     if successful_connections >= 2:  # Need at least 2 successful connections

@@ -1,6 +1,18 @@
 # EE WiFi Auto-Login System
 
-A production-ready Windows system that automatically handles EE WiFi captive portal authentication with BT Business Broadband accounts. Features continuous internet monitoring, automatic re-authentication, graceful Chrome cleanup, and comprehensive logging.
+A production-ready Windows system that automatically handles EE WiFi captive portal authentication with BT Business Broadband accounts. Features continuous internet monitoring, automatic re-authentication with **sub-60 second recovery times**, enhanced error handling, graceful Chrome cleanup, and comprehensive logging.
+
+## 🎉 Latest Improvements (v2.0)
+
+**Major Reliability Enhancements:**
+- ✅ **Multi-Retry Connectivity Verification**: 3 attempts with progressive delays (2s, 4s) 
+- ✅ **Chrome Cleanup Bug Fixed**: No more AttributeError crashes during process management
+- ✅ **HeaderParsingError Handling**: Gracefully handles captive portal transition errors
+- ✅ **Enhanced Error Messages**: Clear [SUCCESS], [ACTIVE], [OK] status indicators
+- ✅ **Unicode Encoding Fixed**: No more character encoding crashes on Windows
+- ✅ **Faster Reconnection**: Optimized to restore connectivity within **60-75 seconds**
+- ✅ **Auto-Start Reliability**: Fixed startup configuration for both scheduled tasks and startup folder
+- ✅ **Comprehensive Troubleshooting**: Detailed error guidance with actionable solutions
 
 ## 🚀 Overview
 
