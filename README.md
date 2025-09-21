@@ -38,6 +38,14 @@ This system provides **fully automated EE WiFi management** for users with BT Bu
 - **🛡️ Smart Process Management**: Selective cleanup preserves user browsing while eliminating stuck WiFi agent processes
 - **🔧 Multiple Interfaces**: Python, PowerShell, and Batch scripts
 
+## 🚀 Fresh Installation
+
+**For new Windows systems**, use our comprehensive installation guides:
+
+📋 **[INSTALLATION_GUIDE.md](INSTALLATION_GUIDE.md)** - Complete step-by-step setup instructions  
+⚡ **[QUICK_INSTALL.bat](QUICK_INSTALL.bat)** - Automated installation script  
+✅ **[DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)** - Verification checklist for enterprise deployment  
+
 ## ⚠️ Security First
 
 **Important**: This repository contains a template configuration file. Never commit your actual WiFi credentials to version control.
